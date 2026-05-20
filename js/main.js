@@ -205,7 +205,7 @@ async function loadSubjects() {
               </div>
 
               <div class="sub-name">
-                ${subject["Course Name"]}
+                ${subject.course_name}
               </div>
 
             </div>
@@ -224,7 +224,7 @@ async function loadSubjects() {
                 type="date"
                 class="exam-date"
                 data-code="${subject.paper_cd}"
-                data-name="${subject["Course Name"]}"
+                data-name="${subject.course_name}"
               >
 
             </div>
@@ -239,7 +239,7 @@ async function loadSubjects() {
                 type="time"
                 class="exam-time"
                 data-code="${subject.paper_cd}"
-                data-name="${subject["Course Name"]}"
+                data-name="${subject.course_name}"
               >
 
             </div>
@@ -325,11 +325,11 @@ function collectFormData() {
         examDates[i]
           .dataset.code,
 
-      "Course Name":
+      "course_name":
         examDates[i]
           .dataset.name,
 
-      "ExamDate(DD-MMM-YY)":
+      "exam_date":
         date,
 
       examtime:

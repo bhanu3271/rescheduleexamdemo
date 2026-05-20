@@ -38,10 +38,17 @@ const successDetail =
   document.getElementById('successDetail');
 
 
+// ======================================
+// GOOGLE SHEET WEB APP URL
+// ======================================
 
-// ===========================
+const GOOGLE_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbyKDIe3okOov2kQSSwjVVTOEvpp_dcSZ_RnG8Dj_PJw6qcUJFu2hTYQu8X2E2dPW35z/exec";
+
+
+// ======================================
 // LOAD PROGRAMS
-// ===========================
+// ======================================
 
 async function loadPrograms() {
 
@@ -85,10 +92,9 @@ async function loadPrograms() {
 loadPrograms();
 
 
-
-// ===========================
+// ======================================
 // LOAD SEMESTERS
-// ===========================
+// ======================================
 
 programSelect.addEventListener(
   'change',
@@ -143,10 +149,9 @@ programSelect.addEventListener(
 );
 
 
-
-// ===========================
+// ======================================
 // LOAD SUBJECTS
-// ===========================
+// ======================================
 
 async function loadSubjects() {
 
@@ -156,10 +161,8 @@ async function loadSubjects() {
   const selectedSemester =
     semesterSelect.value;
 
-  if (
-    !selectedProgram ||
-    !selectedSemester
-  ) {
+  if (!selectedProgram ||
+      !selectedSemester) {
 
     alert(
       'Please select Program and Semester'
@@ -192,9 +195,9 @@ async function loadSubjects() {
       return;
     }
 
-    // =========================
+    // ======================================
     // GROUP SUBJECTS
-    // =========================
+    // ======================================
 
     const groupedSubjects = {};
 
@@ -210,8 +213,7 @@ async function loadSubjects() {
             subject.paper_cd,
 
           course_name:
-            subject.course_name ||
-            subject["Course Name"],
+            subject.course_name,
 
           slots: []
         };
@@ -220,39 +222,33 @@ async function loadSubjects() {
       groupedSubjects[code].slots.push({
 
         exam_date:
-          subject.exam_date ||
-          subject["ExamDate(DD-MMM-YY)"],
+          subject.exam_date,
 
         exam_time:
           subject.examtime
       });
     });
 
-    // =========================
+    // ======================================
     // RENDER SUBJECTS
-    // =========================
+    // ======================================
 
     Object.values(groupedSubjects)
       .forEach((subject, index) => {
 
-      // REMOVE DUPLICATES
+      const slotOptions =
+        subject.slots.map(slot => {
 
-      const uniqueSlots = [];
-
-      const seen = new Set();
-
-      subject.slots.forEach(slot => {
-
-        const key =
-          `${slot.exam_date}-${slot.exam_time}`;
-
-        if (!seen.has(key)) {
-
-          seen.add(key);
-
-          uniqueSlots.push(slot);
-        }
-      });
+          return `
+            <option
+              value="${slot.exam_date}|${slot.exam_time}"
+            >
+              ${slot.exam_date}
+              —
+              ${slot.exam_time}
+            </option>
+          `;
+        }).join('');
 
       subjectsContainer.innerHTML += `
 
@@ -280,10 +276,7 @@ async function loadSubjects() {
 
           <div class="sub-inputs">
 
-            <div
-              class="sub-field"
-              style="width:100%;"
-            >
+            <div class="sub-field">
 
               <label>
                 Select Exam Slot
@@ -299,19 +292,7 @@ async function loadSubjects() {
                   Select Exam Slot
                 </option>
 
-                ${uniqueSlots.map(slot => `
-
-                  <option
-                    value="${slot.exam_date}|${slot.exam_time}"
-                  >
-
-                    ${slot.exam_date}
-                    —
-                    ${slot.exam_time}
-
-                  </option>
-
-                `).join('')}
+                ${slotOptions}
 
               </select>
 
@@ -323,13 +304,11 @@ async function loadSubjects() {
       `;
     });
 
-    // SHOW STEP 2
-
     subjectsSection.classList.remove(
       'hidden'
     );
 
-    // SHOW STEP 3
+    // SHOW REVIEW SECTION
 
     reviewSection.classList.remove(
       'hidden'
@@ -352,18 +331,15 @@ async function loadSubjects() {
   }
 }
 
-
-
 loadSubjectsBtn.addEventListener(
   'click',
   loadSubjects
 );
 
 
-
-// ===========================
+// ======================================
 // COLLECT FORM DATA
-// ===========================
+// ======================================
 
 function collectFormData() {
 
@@ -378,10 +354,16 @@ function collectFormData() {
 
     if (!slot.value) return;
 
-    const [date, time] =
+    const values =
       slot.value.split('|');
 
     rows.push({
+
+      mentor_name:
+        mentorNameInput.value,
+
+      roll_no:
+        rollNoInput.value,
 
       crs_cd:
         programSelect.value,
@@ -396,10 +378,10 @@ function collectFormData() {
         slot.dataset.name,
 
       exam_date:
-        date,
+        values[0],
 
       examtime:
-        time
+        values[1]
     });
   });
 
@@ -407,10 +389,9 @@ function collectFormData() {
 }
 
 
-
-// ===========================
-// SUBMIT DATA
-// ===========================
+// ======================================
+// SUBMIT FORM
+// ======================================
 
 scheduleForm.addEventListener(
   'submit',
@@ -439,38 +420,62 @@ scheduleForm.addEventListener(
 
     try {
 
-      const { error } =
-        await supabaseClient
-          .from('exam_schedule_demo')
-          .insert(rows);
+      const response =
+        await fetch(
+          GOOGLE_SCRIPT_URL,
+          {
+            method: 'POST',
 
-      if (error)
-        throw error;
+            headers: {
+              'Content-Type':
+                'application/json'
+            },
+
+            body:
+              JSON.stringify(rows)
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          'Failed to save'
+        );
+      }
 
       successMsg.classList.remove(
         'hidden'
       );
 
       successDetail.textContent =
-        `${rows.length} schedules saved successfully`;
-
-      successMsg.scrollIntoView({
-        behavior: 'smooth'
-      });
+        `${rows.length} entries saved to Google Sheet`;
 
       scheduleForm.reset();
 
       subjectsContainer.innerHTML =
         '';
 
+      subjectsSection.classList.add(
+        'hidden'
+      );
+
+      reviewSection.classList.add(
+        'hidden'
+      );
+
+      successMsg.scrollIntoView({
+        behavior: 'smooth'
+      });
+
     } catch (err) {
 
       console.error(
-        'Insert Error:',
+        'Submit Error:',
         err.message
       );
 
-      alert(err.message);
+      alert(
+        'Error saving data'
+      );
 
     } finally {
 

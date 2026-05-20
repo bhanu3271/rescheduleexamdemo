@@ -51,16 +51,22 @@
           href="index.html"
           class="nav-link active"
         >
+
           <i class="fas fa-edit"></i>
+
           Schedule Exam
+
         </a>
 
         <a
           href="admin.html"
           class="nav-link"
         >
+
           <i class="fas fa-table"></i>
+
           View Entries
+
         </a>
 
       </nav>
@@ -78,12 +84,16 @@
     <div class="hero-content">
 
       <h1>
+
         Exam Date & Time Scheduler
+
       </h1>
 
       <p>
+
         Manage exam schedules dynamically
         using Supabase database.
+
       </p>
 
     </div>
@@ -98,6 +108,8 @@
 
     <form id="scheduleForm">
 
+
+
       <!-- STEP 1 -->
 
       <div class="card">
@@ -105,11 +117,15 @@
         <div class="card-header">
 
           <span class="step-badge">
+
             Step 1
+
           </span>
 
           <h2>
+
             Student & Program Details
+
           </h2>
 
         </div>
@@ -117,6 +133,10 @@
         <div class="card-body">
 
           <div class="form-grid">
+
+
+
+            <!-- Mentor -->
 
             <div class="form-group">
 
@@ -139,6 +159,8 @@
 
 
 
+            <!-- Roll Number -->
+
             <div class="form-group">
 
               <label for="rollNo">
@@ -160,6 +182,8 @@
 
 
 
+            <!-- Program -->
+
             <div class="form-group">
 
               <label for="program">
@@ -176,7 +200,9 @@
               >
 
                 <option value="">
+
                   -- Select Program --
+
                 </option>
 
               </select>
@@ -184,6 +210,8 @@
             </div>
 
 
+
+            <!-- Semester -->
 
             <div class="form-group">
 
@@ -201,7 +229,9 @@
               >
 
                 <option value="">
+
                   -- Select Semester --
+
                 </option>
 
               </select>
@@ -211,6 +241,8 @@
           </div>
 
 
+
+          <!-- BUTTON -->
 
           <div class="btn-row">
 
@@ -234,7 +266,7 @@
 
 
 
-      <!-- SUBJECTS -->
+      <!-- STEP 2 -->
 
       <div
         class="card hidden"
@@ -244,16 +276,32 @@
         <div class="card-header">
 
           <span class="step-badge">
+
             Step 2
+
           </span>
 
           <h2>
-            Assign Exam Date & Time
+
+            Select Exam Slots
+
           </h2>
 
         </div>
 
         <div class="card-body">
+
+          <p
+            style="
+              margin-bottom:20px;
+              color:#6b7280;
+              font-size:0.95rem;
+            "
+          >
+
+            Choose one exam slot for each subject.
+
+          </p>
 
           <div
             id="subjectsContainer"
@@ -266,7 +314,7 @@
 
 
 
-      <!-- REVIEW -->
+      <!-- STEP 3 -->
 
       <div
         class="card hidden"
@@ -276,52 +324,27 @@
         <div class="card-header">
 
           <span class="step-badge">
+
             Step 3
+
           </span>
 
           <h2>
-            Review & Submit
+
+            Submit Schedule
+
           </h2>
 
         </div>
 
         <div class="card-body">
 
-          <table class="review-table">
-
-            <thead>
-
-              <tr>
-
-                <th>
-                  Subject Code
-                </th>
-
-                <th>
-                  Subject Name
-                </th>
-
-                <th>
-                  Exam Date
-                </th>
-
-                <th>
-                  Exam Time
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody id="reviewTableBody">
-
-            </tbody>
-
-          </table>
-
-
-
-          <div class="btn-row">
+          <div
+            style="
+              display:flex;
+              justify-content:center;
+            "
+          >
 
             <button
               type="submit"
@@ -357,7 +380,9 @@
       <div>
 
         <h3>
+
           Schedule Submitted Successfully
+
         </h3>
 
         <p id="successDetail"></p>
@@ -375,14 +400,16 @@
   <footer class="site-footer">
 
     <p>
+
       © 2025 ExamScheduler
+
     </p>
 
   </footer>
 
 
 
-  <!-- SCRIPTS -->
+  <!-- SUPABASE -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 

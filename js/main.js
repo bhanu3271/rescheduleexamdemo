@@ -22,9 +22,6 @@ const subjectsContainer =
 const reviewSection =
   document.getElementById('reviewSection');
 
-const reviewTableBody =
-  document.getElementById('reviewTableBody');
-
 const scheduleForm =
   document.getElementById('scheduleForm');
 
@@ -244,7 +241,7 @@ async function loadSubjects() {
               value="${slot.exam_date}|${slot.exam_time}"
             >
               ${slot.exam_date}
-              —
+              — 
               ${slot.exam_time}
             </option>
           `;
@@ -307,8 +304,6 @@ async function loadSubjects() {
     subjectsSection.classList.remove(
       'hidden'
     );
-
-    // SHOW REVIEW SECTION
 
     reviewSection.classList.remove(
       'hidden'
@@ -420,27 +415,22 @@ scheduleForm.addEventListener(
 
     try {
 
-      const response =
-        await fetch(
-          GOOGLE_SCRIPT_URL,
-          {
-            method: 'POST',
+      await fetch(
+        GOOGLE_SCRIPT_URL,
+        {
+          method: 'POST',
 
-            headers: {
-              'Content-Type':
-                'application/json'
-            },
+          mode: 'no-cors',
 
-            body:
-              JSON.stringify(rows)
-          }
-        );
+          headers: {
+            'Content-Type':
+              'application/json'
+          },
 
-      if (!response.ok) {
-        throw new Error(
-          'Failed to save'
-        );
-      }
+          body:
+            JSON.stringify(rows)
+        }
+      );
 
       successMsg.classList.remove(
         'hidden'

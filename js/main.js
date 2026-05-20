@@ -323,7 +323,15 @@ async function loadSubjects() {
       `;
     });
 
+    // SHOW STEP 2
+
     subjectsSection.classList.remove(
+      'hidden'
+    );
+
+    // SHOW STEP 3
+
+    reviewSection.classList.remove(
       'hidden'
     );
 

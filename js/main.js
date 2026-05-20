@@ -1,228 +1,339 @@
 const mentorNameInput = document.getElementById('mentorName');
+
 const rollNoInput = document.getElementById('rollNo');
+
 const programSelect = document.getElementById('program');
+
 const semesterSelect = document.getElementById('semester');
 
-const loadSubjectsBtn = document.getElementById('loadSubjectsBtn');
+const loadSubjectsBtn =
+  document.getElementById('loadSubjectsBtn');
 
-const subjectsSection = document.getElementById('subjectsSection');
-const subjectsContainer = document.getElementById('subjectsContainer');
+const subjectsSection =
+  document.getElementById('subjectsSection');
 
-const reviewSection = document.getElementById('reviewSection');
-const reviewTableBody = document.getElementById('reviewTableBody');
+const subjectsContainer =
+  document.getElementById('subjectsContainer');
 
-const scheduleForm = document.getElementById('scheduleForm');
+const reviewSection =
+  document.getElementById('reviewSection');
 
-const submitBtn = document.getElementById('submitBtn');
+const reviewTableBody =
+  document.getElementById('reviewTableBody');
 
-const successMsg = document.getElementById('successMsg');
-const successDetail = document.getElementById('successDetail');
+const scheduleForm =
+  document.getElementById('scheduleForm');
+
+const submitBtn =
+  document.getElementById('submitBtn');
+
+const successMsg =
+  document.getElementById('successMsg');
+
+const successDetail =
+  document.getElementById('successDetail');
 
 
 
-// LOAD PROGRAMS FROM DATABASE
+// ===========================
+// LOAD PROGRAMS
+// ===========================
 
 async function loadPrograms() {
 
-  const { data, error } = await supabaseClient
-    .from('exam_schedule_demo')
-    .select('crs_cd');
+  try {
 
-  if (error) {
-    console.error(error);
-    return;
+    const { data, error } =
+      await supabaseClient
+        .from('exam_schedule_demo')
+        .select('crs_cd');
+
+    if (error) throw error;
+
+    const uniquePrograms =
+      [...new Set(
+        data
+          .map(item => item.crs_cd)
+          .filter(Boolean)
+      )];
+
+    programSelect.innerHTML =
+      '<option value="">-- Select Program --</option>';
+
+    uniquePrograms.forEach(program => {
+
+      programSelect.innerHTML += `
+        <option value="${program}">
+          ${program}
+        </option>
+      `;
+    });
+
+  } catch (err) {
+
+    console.error(
+      'Program Load Error:',
+      err.message
+    );
   }
-
-  const uniquePrograms =
-    [...new Set(data.map(item => item.crs_cd))];
-
-  programSelect.innerHTML =
-    '<option value="">-- Select Program --</option>';
-
-  uniquePrograms.forEach(program => {
-
-    programSelect.innerHTML += `
-      <option value="${program}">
-        ${program}
-      </option>
-    `;
-  });
 }
 
 loadPrograms();
 
 
 
+// ===========================
 // LOAD SEMESTERS
+// ===========================
 
-programSelect.addEventListener('change', async () => {
+programSelect.addEventListener(
+  'change',
+  async () => {
 
-  const selectedProgram = programSelect.value;
+    const selectedProgram =
+      programSelect.value;
 
-  const { data, error } = await supabaseClient
-    .from('exam_schedule_demo')
-    .select('sem')
-    .eq('crs_cd', selectedProgram);
+    semesterSelect.innerHTML =
+      '<option value="">Loading...</option>';
 
-  if (error) {
-    console.error(error);
-    return;
+    try {
+
+      const { data, error } =
+        await supabaseClient
+          .from('exam_schedule_demo')
+          .select('sem')
+          .eq('crs_cd', selectedProgram);
+
+      if (error) throw error;
+
+      const uniqueSemesters =
+        [...new Set(
+          data
+            .map(item => item.sem)
+            .filter(Boolean)
+        )];
+
+      semesterSelect.innerHTML =
+        '<option value="">-- Select Semester --</option>';
+
+      uniqueSemesters.forEach(semester => {
+
+        semesterSelect.innerHTML += `
+          <option value="${semester}">
+            Semester ${semester}
+          </option>
+        `;
+      });
+
+    } catch (err) {
+
+      console.error(
+        'Semester Load Error:',
+        err.message
+      );
+
+      semesterSelect.innerHTML =
+        '<option value="">Error Loading</option>';
+    }
   }
-
-  const uniqueSemesters =
-    [...new Set(data.map(item => item.sem))];
-
-  semesterSelect.innerHTML =
-    '<option value="">-- Select Semester --</option>';
-
-  uniqueSemesters.forEach(semester => {
-
-    semesterSelect.innerHTML += `
-      <option value="${semester}">
-        Semester ${semester}
-      </option>
-    `;
-  });
-});
+);
 
 
 
+// ===========================
 // LOAD SUBJECTS
+// ===========================
 
 async function loadSubjects() {
 
-  const selectedProgram = programSelect.value;
+  const selectedProgram =
+    programSelect.value;
 
-  const selectedSemester = semesterSelect.value;
+  const selectedSemester =
+    semesterSelect.value;
 
-  if (!selectedProgram || !selectedSemester) {
+  if (!selectedProgram ||
+      !selectedSemester) {
 
-    alert('Please select Program and Semester');
+    alert(
+      'Please select Program and Semester'
+    );
 
     return;
   }
 
-  const { data, error } = await supabaseClient
-    .from('exam_schedule_demo')
-    .select('*')
-    .eq('crs_cd', selectedProgram)
-    .eq('sem', selectedSemester);
+  try {
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+    const { data, error } =
+      await supabaseClient
+        .from('exam_schedule_demo')
+        .select('*')
+        .eq('crs_cd', selectedProgram)
+        .eq('sem', selectedSemester);
 
-  subjectsContainer.innerHTML = '';
+    if (error) throw error;
 
-  data.forEach((subject, index) => {
+    subjectsContainer.innerHTML = '';
 
-    subjectsContainer.innerHTML += `
+    if (!data.length) {
 
-      <div class="subject-card">
+      subjectsContainer.innerHTML = `
+        <div class="empty-msg">
+          No subjects found
+        </div>
+      `;
 
-        <div class="sub-header">
+      return;
+    }
 
-          <div class="sub-index">
-            ${index + 1}
-          </div>
+    data.forEach((subject, index) => {
 
-          <div class="sub-info">
+      subjectsContainer.innerHTML += `
 
-            <div class="sub-code">
-              ${subject.paper_cd}
+        <div class="subject-card">
+
+          <div class="sub-header">
+
+            <div class="sub-index">
+              ${index + 1}
             </div>
 
-            <div class="sub-name">
-              ${subject["Course Name"]}
+            <div class="sub-info">
+
+              <div class="sub-code">
+                ${subject.paper_cd}
+              </div>
+
+              <div class="sub-name">
+                ${subject["Course Name"]}
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="sub-inputs">
+
+            <div class="sub-field">
+
+              <label>
+                Exam Date
+              </label>
+
+              <input
+                type="date"
+                class="exam-date"
+                data-code="${subject.paper_cd}"
+                data-name="${subject["Course Name"]}"
+              >
+
+            </div>
+
+            <div class="sub-field">
+
+              <label>
+                Exam Time
+              </label>
+
+              <input
+                type="time"
+                class="exam-time"
+                data-code="${subject.paper_cd}"
+                data-name="${subject["Course Name"]}"
+              >
+
             </div>
 
           </div>
 
         </div>
+      `;
+    });
 
-        <div class="sub-inputs">
+    subjectsSection.classList.remove(
+      'hidden'
+    );
 
-          <div class="sub-field">
+    subjectsSection.scrollIntoView({
+      behavior: 'smooth'
+    });
 
-            <label>Exam Date</label>
+  } catch (err) {
 
-            <input
-              type="date"
-              class="exam-date"
-              data-code="${subject.paper_cd}"
-              data-name="${subject["Course Name"]}"
-            >
+    console.error(
+      'Subject Load Error:',
+      err.message
+    );
 
-          </div>
-
-          <div class="sub-field">
-
-            <label>Exam Time</label>
-
-            <input
-              type="time"
-              class="exam-time"
-              data-code="${subject.paper_cd}"
-              data-name="${subject["Course Name"]}"
-            >
-
-          </div>
-
-        </div>
-
-      </div>
-    `;
-  });
-
-  subjectsSection.classList.remove('hidden');
-
-  subjectsSection.scrollIntoView({
-    behavior: 'smooth'
-  });
+    alert(
+      'Error loading subjects'
+    );
+  }
 }
 
 
 
-loadSubjectsBtn.addEventListener('click', loadSubjects);
+loadSubjectsBtn.addEventListener(
+  'click',
+  loadSubjects
+);
 
 
 
+// ===========================
 // COLLECT FORM DATA
+// ===========================
 
 function collectFormData() {
 
   const examDates =
-    document.querySelectorAll('.exam-date');
+    document.querySelectorAll(
+      '.exam-date'
+    );
 
   const examTimes =
-    document.querySelectorAll('.exam-time');
+    document.querySelectorAll(
+      '.exam-time'
+    );
 
   const rows = [];
 
-  for (let i = 0; i < examDates.length; i++) {
+  for (
+    let i = 0;
+    i < examDates.length;
+    i++
+  ) {
 
-    const date = examDates[i].value;
+    const date =
+      examDates[i].value;
 
-    const time = examTimes[i].value;
+    const time =
+      examTimes[i].value;
 
-    if (!date || !time) continue;
+    if (!date || !time)
+      continue;
 
     rows.push({
 
-      crs_cd: programSelect.value,
+      crs_cd:
+        programSelect.value,
 
-      sem: semesterSelect.value,
+      sem:
+        semesterSelect.value,
 
       paper_cd:
-        examDates[i].dataset.code,
+        examDates[i]
+          .dataset.code,
 
       "Course Name":
-        examDates[i].dataset.name,
+        examDates[i]
+          .dataset.name,
 
-      "ExamDate(DD-MMM-YY)": date,
+      "ExamDate(DD-MMM-YY)":
+        date,
 
-      examtime: time
+      examtime:
+        time
 
     });
   }
@@ -232,54 +343,78 @@ function collectFormData() {
 
 
 
+// ===========================
 // SUBMIT DATA
+// ===========================
 
-scheduleForm.addEventListener('submit', async (e) => {
+scheduleForm.addEventListener(
+  'submit',
+  async (e) => {
 
-  e.preventDefault();
+    e.preventDefault();
 
-  const rows = collectFormData();
+    const rows =
+      collectFormData();
 
-  if (!rows.length) {
+    if (!rows.length) {
 
-    alert('Please enter exam dates and times');
+      alert(
+        'Please enter exam dates and times'
+      );
 
-    return;
+      return;
+    }
+
+    submitBtn.disabled = true;
+
+    submitBtn.innerHTML = `
+      <i class="fas fa-spinner fa-spin"></i>
+      Saving...
+    `;
+
+    try {
+
+      const { error } =
+        await supabaseClient
+          .from('exam_schedule_demo')
+          .insert(rows);
+
+      if (error)
+        throw error;
+
+      successMsg.classList.remove(
+        'hidden'
+      );
+
+      successDetail.textContent =
+        `${rows.length} schedules saved successfully`;
+
+      successMsg.scrollIntoView({
+        behavior: 'smooth'
+      });
+
+      scheduleForm.reset();
+
+      subjectsContainer.innerHTML =
+        '';
+
+    } catch (err) {
+
+      console.error(
+        'Insert Error:',
+        err.message
+      );
+
+      alert(err.message);
+
+    } finally {
+
+      submitBtn.disabled = false;
+
+      submitBtn.innerHTML = `
+        <i class="fas fa-paper-plane"></i>
+        Submit Schedule
+      `;
+    }
   }
-
-  submitBtn.disabled = true;
-
-  submitBtn.innerHTML =
-    '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-  try {
-
-    const { error } = await supabaseClient
-      .from('exam_schedule_demo')
-      .insert(rows);
-
-    if (error) throw error;
-
-    successMsg.classList.remove('hidden');
-
-    successDetail.textContent =
-      `${rows.length} schedules saved successfully`;
-
-    successMsg.scrollIntoView({
-      behavior: 'smooth'
-    });
-
-  } catch (err) {
-
-    console.error(err);
-
-    alert(err.message);
-
-  } finally {
-
-    submitBtn.disabled = false;
-
-    submitBtn.innerHTML =
-      '<i class="fas fa-paper-plane"></i> Submit Schedule';
-  }
-});
+);

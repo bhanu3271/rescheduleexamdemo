@@ -1,46 +1,53 @@
+// ======================================
+// INPUT ELEMENTS
+// ======================================
+
 const mentorNameInput =
-  document.getElementById('mentorName');
+  document.getElementById("mentorName");
+
+const learnerNameInput =
+  document.getElementById("learnerName");
 
 const rollNoInput =
-  document.getElementById('rollNo');
+  document.getElementById("rollNo");
 
 const programSelect =
-  document.getElementById('program');
+  document.getElementById("program");
 
 const semesterSelect =
-  document.getElementById('semester');
+  document.getElementById("semester");
 
 const loadSubjectsBtn =
-  document.getElementById('loadSubjectsBtn');
+  document.getElementById("loadSubjectsBtn");
 
 const subjectsSection =
-  document.getElementById('subjectsSection');
+  document.getElementById("subjectsSection");
 
 const subjectsContainer =
-  document.getElementById('subjectsContainer');
+  document.getElementById("subjectsContainer");
 
 const reviewSection =
-  document.getElementById('reviewSection');
+  document.getElementById("reviewSection");
 
 const scheduleForm =
-  document.getElementById('scheduleForm');
+  document.getElementById("scheduleForm");
 
 const submitBtn =
-  document.getElementById('submitBtn');
+  document.getElementById("submitBtn");
 
 const successMsg =
-  document.getElementById('successMsg');
+  document.getElementById("successMsg");
 
 const successDetail =
-  document.getElementById('successDetail');
+  document.getElementById("successDetail");
 
 
 // ======================================
-// GOOGLE SHEET WEB APP URL
+// GOOGLE SHEETS WEB APP URL
 // ======================================
 
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyKDIe3okOov2kQSSwjVVTOEvpp_dcSZ_RnG8Dj_PJw6qcUJFu2hTYQu8X2E2dPW35z/exec";
+  "https://script.google.com/macros/s/AKfycbwoBA2hMTxPPCz_YpxepMCYZeiUXFCzTToNNwtKq9fJ3d9I-l53Yq3gspoeLYRnVHFk/exec";
 
 
 // ======================================
@@ -53,8 +60,8 @@ async function loadPrograms() {
 
     const { data, error } =
       await supabaseClient
-        .from('exam_schedule')
-        .select('program');
+        .from("exam_schedule")
+        .select("program");
 
     if (error) throw error;
 
@@ -71,22 +78,28 @@ async function loadPrograms() {
     uniquePrograms.forEach(program => {
 
       programSelect.innerHTML += `
-        <option value="${program}">
-          ${program}
-        </option>
+      <option value="${program}">
+      ${program}
+      </option>
       `;
+
     });
 
-  } catch (err) {
+  }
+
+  catch (err) {
 
     console.error(
-      'Program Load Error:',
+      "Program Load Error:",
       err.message
     );
+
   }
+
 }
 
 loadPrograms();
+
 
 
 // ======================================
@@ -94,24 +107,28 @@ loadPrograms();
 // ======================================
 
 programSelect.addEventListener(
-  'change',
+  "change",
   async () => {
 
     const selectedProgram =
       programSelect.value;
 
+
     semesterSelect.innerHTML =
       '<option value="">Loading...</option>';
+
 
     try {
 
       const { data, error } =
         await supabaseClient
-          .from('exam_schedule')
-          .select('semester')
-          .eq('program', selectedProgram);
+          .from("exam_schedule")
+          .select("semester")
+          .eq("program", selectedProgram);
+
 
       if (error) throw error;
+
 
       const uniqueSemesters =
         [...new Set(
@@ -120,28 +137,35 @@ programSelect.addEventListener(
             .filter(Boolean)
         )];
 
+
       semesterSelect.innerHTML =
         '<option value="">-- Select Semester --</option>';
+
 
       uniqueSemesters.forEach(semester => {
 
         semesterSelect.innerHTML += `
-          <option value="${semester}">
-            Semester ${semester}
-          </option>
+        <option value="${semester}">
+        Semester ${semester}
+        </option>
         `;
+
       });
 
-    } catch (err) {
+    }
+
+    catch (err) {
 
       console.error(
-        'Semester Load Error:',
+        "Semester Load Error:",
         err.message
       );
 
       semesterSelect.innerHTML =
         '<option value="">Error Loading</option>';
+
     }
+
   }
 );
 
@@ -158,49 +182,58 @@ async function loadSubjects() {
   const selectedSemester =
     semesterSelect.value;
 
+
   if (!selectedProgram ||
       !selectedSemester) {
 
     alert(
-      'Please select Program and Semester'
+      "Please select Program and Semester."
     );
 
     return;
+
   }
+
 
   try {
 
     const { data, error } =
       await supabaseClient
-        .from('exam_schedule')
-        .select('*')
-        .eq('program', selectedProgram)
-        .eq('semester', selectedSemester);
+        .from("exam_schedule")
+        .select("*")
+        .eq("program", selectedProgram)
+        .eq("semester", selectedSemester);
+
 
     if (error) throw error;
 
-    subjectsContainer.innerHTML = '';
+
+    subjectsContainer.innerHTML = "";
+
 
     if (!data.length) {
 
       subjectsContainer.innerHTML = `
-        <div class="empty-msg">
-          No subjects found
-        </div>
+      <div class="empty-msg">
+      No subjects found.
+      </div>
       `;
 
       return;
+
     }
 
-    // ======================================
+
     // GROUP SUBJECTS
-    // ======================================
 
     const groupedSubjects = {};
 
+
     data.forEach(subject => {
 
-      const code = subject.paper_code;
+      const code =
+        subject.paper_code;
+
 
       if (!groupedSubjects[code]) {
 
@@ -213,8 +246,11 @@ async function loadSubjects() {
             subject.course_name,
 
           slots: []
+
         };
+
       }
+
 
       groupedSubjects[code].slots.push({
 
@@ -223,111 +259,130 @@ async function loadSubjects() {
 
         exam_time:
           subject.exam_time
+
       });
+
     });
 
-    // ======================================
+
+
     // RENDER SUBJECTS
-    // ======================================
 
     Object.values(groupedSubjects)
       .forEach((subject, index) => {
+
 
       const slotOptions =
         subject.slots.map(slot => {
 
           return `
-            <option
-              value="${slot.exam_date}|${slot.exam_time}"
-            >
-              ${slot.exam_date}
-              — 
-              ${slot.exam_time}
-            </option>
+          <option value="${slot.exam_date}|${slot.exam_time}">
+
+          ${slot.exam_date} - ${slot.exam_time}
+
+          </option>
           `;
-        }).join('');
+
+        }).join("");
+
+
 
       subjectsContainer.innerHTML += `
 
-        <div class="subject-card">
+      <div class="subject-card">
 
-          <div class="sub-header">
+        <div class="sub-header">
 
-            <div class="sub-index">
-              ${index + 1}
-            </div>
-
-            <div class="sub-info">
-
-              <div class="sub-code">
-                ${subject.paper_code}
-              </div>
-
-              <div class="sub-name">
-                ${subject.course_name}
-              </div>
-
-            </div>
-
+          <div class="sub-index">
+          ${index + 1}
           </div>
 
-          <div class="sub-inputs">
+          <div class="sub-info">
 
-            <div class="sub-field">
+            <div class="sub-code">
+            ${subject.paper_code}
+            </div>
 
-              <label>
-                Select Exam Slot
-              </label>
-
-              <select
-                class="exam-slot"
-                data-code="${subject.paper_code}"
-                data-name="${subject.course_name}"
-              >
-
-                <option value="">
-                  Select Exam Slot
-                </option>
-
-                ${slotOptions}
-
-              </select>
-
+            <div class="sub-name">
+            ${subject.course_name}
             </div>
 
           </div>
 
         </div>
+
+
+        <div class="sub-inputs">
+
+          <div class="sub-field">
+
+            <label>
+            Select Exam Slot
+            </label>
+
+            <select
+            class="exam-slot"
+            data-code="${subject.paper_code}"
+            data-name="${subject.course_name}">
+
+            <option value="">
+            Select Exam Slot
+            </option>
+
+            ${slotOptions}
+
+            </select>
+
+          </div>
+
+        </div>
+
+      </div>
+
       `;
+
+
     });
+
+
 
     subjectsSection.classList.remove(
-      'hidden'
+      "hidden"
     );
+
 
     reviewSection.classList.remove(
-      'hidden'
+      "hidden"
     );
 
+
     subjectsSection.scrollIntoView({
-      behavior: 'smooth'
+
+      behavior: "smooth"
+
     });
 
-  } catch (err) {
+
+  }
+
+  catch (err) {
 
     console.error(
-      'Subject Load Error:',
+      "Subject Load Error:",
       err.message
     );
 
     alert(
-      'Error loading subjects'
+      "Error loading subjects."
     );
+
   }
+
 }
 
+
 loadSubjectsBtn.addEventListener(
-  'click',
+  "click",
   loadSubjects
 );
 
@@ -340,25 +395,32 @@ function collectFormData() {
 
   const examSlots =
     document.querySelectorAll(
-      '.exam-slot'
+      ".exam-slot"
     );
 
+
   const rows = [];
+
 
   examSlots.forEach(slot => {
 
     if (!slot.value) return;
 
+
     const values =
-      slot.value.split('|');
+      slot.value.split("|");
+
 
     rows.push({
 
       mentor_name:
-        mentorNameInput.value,
+        mentorNameInput.value.trim(),
+
+      learner_name:
+        learnerNameInput.value.trim(),
 
       roll_no:
-        rollNoInput.value,
+        rollNoInput.value.trim(),
 
       program:
         programSelect.value,
@@ -377,11 +439,16 @@ function collectFormData() {
 
       exam_time:
         values[1]
+
     });
+
   });
 
+
   return rows;
+
 }
+
 
 
 // ======================================
@@ -389,92 +456,171 @@ function collectFormData() {
 // ======================================
 
 scheduleForm.addEventListener(
-  'submit',
+
+  "submit",
+
   async (e) => {
 
     e.preventDefault();
 
-    const rows =
-      collectFormData();
 
-    if (!rows.length) {
+
+    // VALIDATIONS
+
+    if (
+
+      mentorNameInput.value.trim() === "" ||
+
+      learnerNameInput.value.trim() === "" ||
+
+      rollNoInput.value.trim() === "" ||
+
+      programSelect.value === "" ||
+
+      semesterSelect.value === ""
+
+    ) {
 
       alert(
-        'Please select exam slots'
+        "Please fill all mandatory fields."
       );
 
       return;
+
     }
+
+
+
+    const rows =
+      collectFormData();
+
+
+    const totalSubjects =
+      document.querySelectorAll(
+        ".exam-slot"
+      ).length;
+
+
+
+    if (rows.length !== totalSubjects) {
+
+      alert(
+        "Please select an exam slot for all subjects."
+      );
+
+      return;
+
+    }
+
+
 
     submitBtn.disabled = true;
 
+
     submitBtn.innerHTML = `
-      <i class="fas fa-spinner fa-spin"></i>
-      Saving...
+    <i class="fas fa-spinner fa-spin"></i>
+    Submitting...
     `;
+
+
 
     try {
 
-      await fetch(
-        GOOGLE_SCRIPT_URL,
-        {
-          method: 'POST',
 
-          mode: 'no-cors',
+      await fetch(
+
+        GOOGLE_SCRIPT_URL,
+
+        {
+
+          method: "POST",
+
+          mode: "no-cors",
 
           headers: {
-            'Content-Type':
-              'application/json'
+
+            "Content-Type":
+              "application/json"
+
           },
 
           body:
             JSON.stringify(rows)
+
         }
+
       );
+
+
 
       successMsg.classList.remove(
-        'hidden'
+        "hidden"
       );
 
+
       successDetail.textContent =
-        `${rows.length} entries saved to Google Sheet`;
+
+        `Reschedule request submitted successfully for ${rows.length} subject(s).`;
+
+
+
+      // RESET FORM
 
       scheduleForm.reset();
 
+
       subjectsContainer.innerHTML =
-        '';
+        "";
+
 
       subjectsSection.classList.add(
-        'hidden'
+        "hidden"
       );
+
 
       reviewSection.classList.add(
-        'hidden'
+        "hidden"
       );
 
+
       successMsg.scrollIntoView({
-        behavior: 'smooth'
+
+        behavior: "smooth"
+
       });
 
-    } catch (err) {
+
+    }
+
+    catch (err) {
+
 
       console.error(
-        'Submit Error:',
+        "Submit Error:",
         err.message
       );
 
+
       alert(
-        'Error saving data'
+        "Error submitting the request."
       );
 
-    } finally {
+
+    }
+
+    finally {
+
 
       submitBtn.disabled = false;
 
+
       submitBtn.innerHTML = `
-        <i class="fas fa-paper-plane"></i>
-        Submit Schedule
+      <i class="fas fa-paper-plane"></i>
+      Submit Request
       `;
+
     }
+
   }
+
 );

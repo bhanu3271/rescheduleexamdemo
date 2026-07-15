@@ -46,7 +46,7 @@ async function loadData(page = 1) {
 
     const { data, error } =
       await supabaseClient
-        .from('exam_schedule_demo')
+        .from('exam_schedule')
         .select('*');
 
     if (error) throw error;
@@ -59,17 +59,17 @@ async function loadData(page = 1) {
 
       roll_no: r.roll_no,
 
-      program: r.crs_cd,
+      program: r.program,
 
       semester: r.sem,
 
-      subject_code: r.paper_cd,
+      subject_code: r.paper_code,
 
       subject_name: r["Course Name"],
 
       exam_date: r["ExamDate(DD-MMM-YY)"],
 
-      exam_time: r.examtime
+      exam_time: r.exam_time
 
     }));
 
@@ -524,7 +524,7 @@ function openDeleteModal(id) {
 
         const { error } =
           await supabaseClient
-            .from('exam_schedule_demo')
+            .from('exam_schedule')
             .delete()
             .eq('id', deleteTargetId);
 

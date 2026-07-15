@@ -1,532 +1,512 @@
 /**
- * admin.js — Admin Panel
+ * admin.js
+ * Displays the uploaded exam schedule master data.
  */
 
 let allRecords = [];
-let filteredRecs = [];
+let filteredRecords = [];
 
 let currentPage = 1;
-
 const PAGE_SIZE = 20;
 
-let sortField = 'exam_date';
-
-let sortDir = 'asc';
+let sortField = "exam_date";
+let sortDir = "asc";
 
 let deleteTargetId = null;
 
 
-
+//--------------------------------------------------
 // LOAD DATA
+//--------------------------------------------------
 
-document.addEventListener(
-  'DOMContentLoaded',
-  () => loadData(1)
-);
+document.addEventListener("DOMContentLoaded", () => {
+    loadData(1);
+});
 
 
-
-// LOAD DATA FROM SUPABASE
+//--------------------------------------------------
+// FETCH DATA FROM SUPABASE
+//--------------------------------------------------
 
 async function loadData(page = 1) {
 
-  currentPage = page;
+    currentPage = page;
 
-  document.getElementById('tableBody').innerHTML = `
+    document.getElementById("tableBody").innerHTML = `
     <tr>
-      <td colspan="10" class="no-data">
-        <i class="fas fa-spinner fa-spin"></i>
-        <br/>
-        Loading...
-      </td>
-    </tr>
-  `;
-
-  try {
-
-    const { data, error } =
-      await supabaseClient
-        .from('exam_schedule')
-        .select('*');
-
-    if (error) throw error;
-
-    allRecords = (data || []).map(r => ({
-
-      id: r.id,
-
-      mentor_name: r.mentor_name,
-
-      roll_no: r.roll_no,
-
-      program: r.program,
-
-      semester: r.sem,
-
-      subject_code: r.paper_code,
-
-      subject_name: r["Course Name"],
-
-      exam_date: r["ExamDate(DD-MMM-YY)"],
-
-      exam_time: r.exam_time
-
-    }));
-
-    updateStats();
-
-    populateFilters();
-
-    applyFiltersAndSort();
-
-  } catch (err) {
-
-    document.getElementById('tableBody').innerHTML = `
-      <tr>
-        <td colspan="10" class="no-data">
-          Failed to load data
-          <br/>
-          ${err.message}
+        <td colspan="8" class="no-data">
+            <i class="fas fa-spinner fa-spin"></i>
+            <br>
+            Loading...
         </td>
-      </tr>
+    </tr>
     `;
-  }
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .from("exam_schedule")
+            .select("*");
+
+        if (error) throw error;
+
+
+        allRecords = (data || []).map(record => ({
+
+            id: record.id,
+
+            program: record.program,
+
+            semester: record.semester,
+
+            subject_code: record.paper_code,
+
+            subject_name: record.course_name,
+
+            exam_date: record.exam_date,
+
+            exam_time: record.exam_time
+
+        }));
+
+
+        updateStats();
+        populateFilters();
+        applyFiltersAndSort();
+
+    }
+
+    catch (error) {
+
+        document.getElementById("tableBody").innerHTML = `
+        <tr>
+            <td colspan="8" class="no-data">
+                Failed to load data.
+                <br>
+                ${error.message}
+            </td>
+        </tr>
+        `;
+
+    }
+
 }
 
 
 
+//--------------------------------------------------
 // UPDATE STATS
+//--------------------------------------------------
 
 function updateStats() {
 
-  const students =
-    new Set(allRecords.map(r => r.roll_no)).size;
+    document.getElementById("statTotal").textContent =
+        allRecords.length;
 
-  const programs =
-    new Set(allRecords.map(r => r.program)).size;
+    document.getElementById("statStudents").textContent =
+        "-";
 
-  const semesters =
-    new Set(allRecords.map(r => r.semester)).size;
+    document.getElementById("statPrograms").textContent =
+        new Set(allRecords.map(r => r.program)).size;
 
-  document.getElementById('statTotal').textContent =
-    allRecords.length;
+    document.getElementById("statSemesters").textContent =
+        new Set(allRecords.map(r => r.semester)).size;
 
-  document.getElementById('statStudents').textContent =
-    students;
-
-  document.getElementById('statPrograms').textContent =
-    programs;
-
-  document.getElementById('statSemesters').textContent =
-    semesters;
 }
 
 
 
-// POPULATE FILTERS
+//--------------------------------------------------
+// FILTERS
+//--------------------------------------------------
 
 function populateFilters() {
 
-  const programs =
-    [...new Set(allRecords.map(r => r.program))];
+    const programs =
+        [...new Set(allRecords.map(r => r.program))];
 
-  const semesters =
-    [...new Set(allRecords.map(r => r.semester))];
+    const semesters =
+        [...new Set(allRecords.map(r => r.semester))];
 
-  const progSel =
-    document.getElementById('filterProgram');
 
-  const semSel =
-    document.getElementById('filterSemester');
+    const programFilter =
+        document.getElementById("filterProgram");
 
-  progSel.innerHTML =
-    '<option value="">All Programs</option>';
+    const semesterFilter =
+        document.getElementById("filterSemester");
 
-  semSel.innerHTML =
-    '<option value="">All Semesters</option>';
 
-  programs.forEach(program => {
+    programFilter.innerHTML =
+        '<option value="">All Programs</option>';
 
-    progSel.innerHTML += `
-      <option value="${program}">
-        ${program}
-      </option>
-    `;
-  });
+    semesterFilter.innerHTML =
+        '<option value="">All Semesters</option>';
 
-  semesters.forEach(semester => {
 
-    semSel.innerHTML += `
-      <option value="${semester}">
-        ${semester}
-      </option>
-    `;
-  });
+    programs.forEach(program => {
+
+        programFilter.innerHTML += `
+        <option value="${program}">
+            ${program}
+        </option>
+        `;
+
+    });
+
+
+    semesters.forEach(semester => {
+
+        semesterFilter.innerHTML += `
+        <option value="${semester}">
+            ${semester}
+        </option>
+        `;
+
+    });
+
 }
 
 
 
+//--------------------------------------------------
 // SEARCH
+//--------------------------------------------------
 
 function onSearch() {
 
-  currentPage = 1;
+    currentPage = 1;
 
-  applyFiltersAndSort();
+    applyFiltersAndSort();
+
 }
 
 
 
-// FILTER + SORT
+//--------------------------------------------------
+// APPLY FILTERS
+//--------------------------------------------------
 
 function applyFiltersAndSort() {
 
-  const query =
-    document.getElementById('searchInput')
-      .value
-      .toLowerCase();
+    const searchText =
+        document.getElementById("searchInput")
+            .value.toLowerCase();
 
-  const progFilter =
-    document.getElementById('filterProgram')
-      .value;
+    const program =
+        document.getElementById("filterProgram")
+            .value;
 
-  const semFilter =
-    document.getElementById('filterSemester')
-      .value;
+    const semester =
+        document.getElementById("filterSemester")
+            .value;
 
-  filteredRecs = allRecords.filter(r => {
 
-    const matchQuery =
+    filteredRecords = allRecords.filter(record => {
 
-      !query ||
+        const matchSearch =
 
-      (r.roll_no || '')
-        .toLowerCase()
-        .includes(query) ||
+            !searchText ||
 
-      (r.subject_name || '')
-        .toLowerCase()
-        .includes(query) ||
+            record.program?.toLowerCase().includes(searchText) ||
 
-      (r.subject_code || '')
-        .toLowerCase()
-        .includes(query) ||
+            record.subject_code?.toLowerCase().includes(searchText) ||
 
-      (r.program || '')
-        .toLowerCase()
-        .includes(query);
+            record.subject_name?.toLowerCase().includes(searchText);
 
-    const matchProgram =
-      !progFilter ||
-      r.program === progFilter;
 
-    const matchSemester =
-      !semFilter ||
-      r.semester === semFilter;
+        const matchProgram =
+            !program || record.program === program;
 
-    return (
-      matchQuery &&
-      matchProgram &&
-      matchSemester
-    );
-  });
 
-  filteredRecs.sort((a, b) => {
+        const matchSemester =
+            !semester || record.semester === semester;
 
-    const va =
-      (a[sortField] || '')
-        .toString()
-        .toLowerCase();
 
-    const vb =
-      (b[sortField] || '')
-        .toString()
-        .toLowerCase();
+        return (
+            matchSearch &&
+            matchProgram &&
+            matchSemester
+        );
 
-    if (va < vb)
-      return sortDir === 'asc' ? -1 : 1;
+    });
 
-    if (va > vb)
-      return sortDir === 'asc' ? 1 : -1;
 
-    return 0;
-  });
+    filteredRecords.sort((a, b) => {
 
-  renderTable();
+        const valueA =
+            (a[sortField] || "").toString().toLowerCase();
 
-  renderPagination();
+        const valueB =
+            (b[sortField] || "").toString().toLowerCase();
+
+
+        if (valueA < valueB)
+            return sortDir === "asc" ? -1 : 1;
+
+        if (valueA > valueB)
+            return sortDir === "asc" ? 1 : -1;
+
+        return 0;
+
+    });
+
+
+    renderTable();
+    renderPagination();
+
 }
 
 
 
-// SORT
+//--------------------------------------------------
+// SORTING
+//--------------------------------------------------
 
 function sortBy(field) {
 
-  if (sortField === field) {
+    if (sortField === field) {
 
-    sortDir =
-      sortDir === 'asc'
-        ? 'desc'
-        : 'asc';
+        sortDir =
+            sortDir === "asc"
+                ? "desc"
+                : "asc";
 
-  } else {
+    }
 
-    sortField = field;
+    else {
 
-    sortDir = 'asc';
-  }
+        sortField = field;
+        sortDir = "asc";
 
-  applyFiltersAndSort();
+    }
+
+    applyFiltersAndSort();
+
 }
 
 
 
+//--------------------------------------------------
 // RENDER TABLE
+//--------------------------------------------------
 
 function renderTable() {
 
-  const tbody =
-    document.getElementById('tableBody');
+    const tbody =
+        document.getElementById("tableBody");
 
-  if (!filteredRecs.length) {
 
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="10" class="no-data">
-          No records found
-        </td>
-      </tr>
-    `;
+    if (!filteredRecords.length) {
 
-    return;
-  }
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="no-data">
+                No records found.
+            </td>
+        </tr>
+        `;
 
-  const start =
-    (currentPage - 1) * PAGE_SIZE;
+        return;
 
-  const end =
-    start + PAGE_SIZE;
+    }
 
-  const page =
-    filteredRecs.slice(start, end);
 
-  tbody.innerHTML = page.map((r, idx) => `
+    const start =
+        (currentPage - 1) * PAGE_SIZE;
+
+
+    const pageRecords =
+        filteredRecords.slice(
+            start,
+            start + PAGE_SIZE
+        );
+
+
+    tbody.innerHTML = pageRecords.map((record, index) => `
 
     <tr>
 
-      <td>
-        ${start + idx + 1}
-      </td>
+        <td>${start + index + 1}</td>
 
-      <td>
-        ${escHtml(r.roll_no || '-')}
-      </td>
+        <td>${record.program}</td>
 
-      <td>
-        ${escHtml(r.program || '-')}
-      </td>
+        <td>${record.semester}</td>
 
-      <td>
-        ${escHtml(r.semester || '-')}
-      </td>
+        <td>${record.subject_code}</td>
 
-      <td>
-        ${escHtml(r.subject_code || '-')}
-      </td>
+        <td>${record.subject_name}</td>
 
-      <td>
-        ${escHtml(r.subject_name || '-')}
-      </td>
+        <td>${record.exam_date}</td>
 
-      <td>
-        ${formatDate(r.exam_date)}
-      </td>
+        <td>${record.exam_time}</td>
 
-      <td>
-        ${formatTime(r.exam_time)}
-      </td>
-
-      <td>
-        ${escHtml(r.mentor_name || '-')}
-      </td>
-
-      <td>
+        <td>
 
         <button
-          class="btn btn-danger"
-          onclick="openDeleteModal('${r.id}')"
-        >
+        class="btn btn-danger"
+        onclick="openDeleteModal('${record.id}')">
 
-          <i class="fas fa-trash"></i>
+        <i class="fas fa-trash"></i>
 
         </button>
 
-      </td>
+        </td>
 
     </tr>
 
-  `).join('');
+    `).join("");
+
 }
 
 
 
+//--------------------------------------------------
 // PAGINATION
+//--------------------------------------------------
 
 function renderPagination() {
 
-  const total =
-    filteredRecs.length;
+    const totalPages =
+        Math.ceil(
+            filteredRecords.length / PAGE_SIZE
+        );
 
-  const totalPages =
-    Math.ceil(total / PAGE_SIZE);
 
-  const pg =
-    document.getElementById('paginationRow');
+    const pagination =
+        document.getElementById("paginationRow");
 
-  const info =
-    document.getElementById('pageInfo');
 
-  info.textContent =
-    `Showing ${total} entries`;
+    pagination.innerHTML = "";
 
-  if (totalPages <= 1) {
 
-    pg.innerHTML = '';
+    for (let i = 1; i <= totalPages; i++) {
 
-    return;
-  }
+        pagination.innerHTML += `
 
-  let html = '';
+        <button
+        class="page-btn ${i === currentPage ? "active" : ""}"
+        onclick="goPage(${i})">
 
-  for (let i = 1; i <= totalPages; i++) {
-
-    html += `
-      <button
-        class="page-btn ${i === currentPage ? 'active' : ''}"
-        onclick="goPage(${i})"
-      >
         ${i}
-      </button>
-    `;
-  }
 
-  pg.innerHTML = html;
+        </button>
+
+        `;
+
+    }
+
+
+    document.getElementById("pageInfo").textContent =
+        `Total Records : ${filteredRecords.length}`;
+
 }
 
 
 
 function goPage(page) {
 
-  currentPage = page;
+    currentPage = page;
 
-  renderTable();
+    renderTable();
+    renderPagination();
 
-  renderPagination();
 }
 
 
 
+//--------------------------------------------------
 // EXPORT CSV
+//--------------------------------------------------
 
 function exportCSV() {
 
-  if (!filteredRecs.length) {
+    if (!filteredRecords.length) {
 
-    alert('No data to export');
+        alert("No records found.");
 
-    return;
-  }
+        return;
 
-  const headers = [
+    }
 
-    'Roll No',
 
-    'Program',
+    const headers = [
 
-    'Semester',
+        "Program",
+        "Semester",
+        "Paper Code",
+        "Course Name",
+        "Exam Date",
+        "Exam Time"
 
-    'Subject Code',
+    ];
 
-    'Subject Name',
 
-    'Exam Date',
+    const rows = filteredRecords.map(record => [
 
-    'Exam Time',
+        record.program,
+        record.semester,
+        record.subject_code,
+        record.subject_name,
+        record.exam_date,
+        record.exam_time
 
-    'Mentor Name'
-  ];
+    ]);
 
-  const rows = filteredRecs.map(r => [
 
-    csvEsc(r.roll_no),
+    const csvContent =
+        [headers, ...rows]
+            .map(row => row.join(","))
+            .join("\n");
 
-    csvEsc(r.program),
 
-    csvEsc(r.semester),
+    const blob =
+        new Blob([csvContent], {
+            type: "text/csv"
+        });
 
-    csvEsc(r.subject_code),
 
-    csvEsc(r.subject_name),
+    const link =
+        document.createElement("a");
 
-    csvEsc(r.exam_date),
 
-    csvEsc(r.exam_time),
+    link.href =
+        URL.createObjectURL(blob);
 
-    csvEsc(r.mentor_name)
+    link.download =
+        "exam_schedule_master.csv";
 
-  ]);
+    link.click();
 
-  const csvContent =
-    [headers, ...rows]
-      .map(r => r.join(','))
-      .join('\n');
-
-  const blob =
-    new Blob([csvContent], {
-      type: 'text/csv;charset=utf-8;'
-    });
-
-  const url =
-    URL.createObjectURL(blob);
-
-  const a =
-    document.createElement('a');
-
-  a.href = url;
-
-  a.download = 'exam_schedule.csv';
-
-  document.body.appendChild(a);
-
-  a.click();
-
-  document.body.removeChild(a);
 }
 
 
 
-// DELETE
+//--------------------------------------------------
+// DELETE RECORD
+//--------------------------------------------------
 
 function openDeleteModal(id) {
 
-  deleteTargetId = id;
+    deleteTargetId = id;
 
-  const modal =
-    document.getElementById('deleteModal');
+    document.getElementById("deleteModal")
+        .style.display = "flex";
 
-  modal.style.display = 'flex';
 
-  document.getElementById('confirmDeleteBtn').onclick =
-    async () => {
+    document.getElementById("confirmDeleteBtn")
+        .onclick = deleteRecord;
 
-      try {
+}
 
-        const { error } =
-          await supabaseClient
-            .from('exam_schedule')
+
+async function deleteRecord() {
+
+    try {
+
+        const { error } = await supabaseClient
+            .from("exam_schedule")
             .delete()
-            .eq('id', deleteTargetId);
+            .eq("id", deleteTargetId);
 
         if (error) throw error;
 
@@ -534,72 +514,35 @@ function openDeleteModal(id) {
 
         loadData(currentPage);
 
-      } catch (err) {
+    }
 
-        alert(err.message);
-      }
-    };
+    catch (error) {
+
+        alert(error.message);
+
+    }
+
 }
-
 
 
 function closeDeleteModal() {
 
-  document.getElementById('deleteModal')
-    .style.display = 'none';
+    document.getElementById("deleteModal")
+        .style.display = "none";
 
-  deleteTargetId = null;
 }
 
 
+document.getElementById("deleteModal")
+    .addEventListener("click", function (e) {
 
-document.getElementById('deleteModal')
-  .addEventListener('click', (e) => {
+        if (
+            e.target ===
+            document.getElementById("deleteModal")
+        ) {
 
-    if (
-      e.target ===
-      document.getElementById('deleteModal')
-    ) {
+            closeDeleteModal();
 
-      closeDeleteModal();
-    }
-  });
+        }
 
-
-
-// HELPERS
-
-function escHtml(str) {
-
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-
-
-function csvEsc(val) {
-
-  if (val == null) return '';
-
-  return `"${String(val).replace(/"/g, '""')}"`;
-}
-
-
-
-function formatDate(dateStr) {
-
-  if (!dateStr) return '-';
-
-  return dateStr;
-}
-
-
-
-function formatTime(timeStr) {
-
-  if (!timeStr) return '-';
-
-  return timeStr;
-}
+    });

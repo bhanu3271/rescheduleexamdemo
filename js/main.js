@@ -53,15 +53,15 @@ async function loadPrograms() {
 
     const { data, error } =
       await supabaseClient
-        .from('exam_schedule_demo')
-        .select('crs_cd');
+        .from('exam_schedule')
+        .select('program');
 
     if (error) throw error;
 
     const uniquePrograms =
       [...new Set(
         data
-          .map(item => item.crs_cd)
+          .map(item => item.program)
           .filter(Boolean)
       )];
 
@@ -107,16 +107,16 @@ programSelect.addEventListener(
 
       const { data, error } =
         await supabaseClient
-          .from('exam_schedule_demo')
-          .select('sem')
-          .eq('crs_cd', selectedProgram);
+          .from('exam_schedule')
+          .select('semester')
+          .eq('program', selectedProgram);
 
       if (error) throw error;
 
       const uniqueSemesters =
         [...new Set(
           data
-            .map(item => item.sem)
+            .map(item => item.semester)
             .filter(Boolean)
         )];
 
@@ -172,10 +172,10 @@ async function loadSubjects() {
 
     const { data, error } =
       await supabaseClient
-        .from('exam_schedule_demo')
+        .from('exam_schedule')
         .select('*')
-        .eq('crs_cd', selectedProgram)
-        .eq('sem', selectedSemester);
+        .eq('program', selectedProgram)
+        .eq('semester', selectedSemester);
 
     if (error) throw error;
 
@@ -200,14 +200,14 @@ async function loadSubjects() {
 
     data.forEach(subject => {
 
-      const code = subject.paper_cd;
+      const code = subject.paper_code;
 
       if (!groupedSubjects[code]) {
 
         groupedSubjects[code] = {
 
-          paper_cd:
-            subject.paper_cd,
+          paper_code:
+            subject.paper_code,
 
           course_name:
             subject.course_name,
@@ -222,7 +222,7 @@ async function loadSubjects() {
           subject.exam_date,
 
         exam_time:
-          subject.examtime
+          subject.exam_time
       });
     });
 
@@ -260,7 +260,7 @@ async function loadSubjects() {
             <div class="sub-info">
 
               <div class="sub-code">
-                ${subject.paper_cd}
+                ${subject.paper_code}
               </div>
 
               <div class="sub-name">
@@ -281,7 +281,7 @@ async function loadSubjects() {
 
               <select
                 class="exam-slot"
-                data-code="${subject.paper_cd}"
+                data-code="${subject.paper_code}"
                 data-name="${subject.course_name}"
               >
 
@@ -360,13 +360,13 @@ function collectFormData() {
       roll_no:
         rollNoInput.value,
 
-      crs_cd:
+      program:
         programSelect.value,
 
-      sem:
+      semester:
         semesterSelect.value,
 
-      paper_cd:
+      paper_code:
         slot.dataset.code,
 
       course_name:
@@ -375,7 +375,7 @@ function collectFormData() {
       exam_date:
         values[0],
 
-      examtime:
+      exam_time:
         values[1]
     });
   });

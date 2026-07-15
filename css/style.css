@@ -468,7 +468,7 @@ body {
   font-family: var(--font);
   font-size: 0.9rem;
   outline: none;
-  min-width: 220px;
+  min-width: 280px;
 }
 .admin-search input:focus {
   border-color: var(--primary);
@@ -484,7 +484,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
-  min-width: 760px;
+  min-width: 650px;
 }
 .admin-tbl thead tr {
   background: var(--primary);
@@ -516,9 +516,9 @@ body {
   background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: 10px;
-  padding: 18px 24px;
+  padding: 20px 24px;
   flex: 1;
-  min-width: 140px;
+  min-width: 180px;
   text-align: center;
   box-shadow: var(--shadow);
 }

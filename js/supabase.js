@@ -1,7 +1,7 @@
-const SUPABASE_URL = "https://amcbskufueuyybxrciwm.supabase.co";
+const SUPABASE_URL = "https://ntdchtznalgitinaorrn.supabase.co";
 
 const SUPABASE_KEY =
-  "sb_publishable_t4JtNOBspP6CO3YiHLx-Tg_HL_almTd";
+  "sb_secret_W35IphUwBqOGFvFPADENPg_nZACImr3";
 
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,

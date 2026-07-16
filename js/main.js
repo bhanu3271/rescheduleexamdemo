@@ -466,21 +466,16 @@ async(e)=>{
 e.preventDefault();
 
 
-if(
+if (
 
-mentorNameInput.value.trim()==="" ||
+mentorNameInput.value.trim() === "" ||
+rollNoInput.value.trim() === ""
 
-learnerNameInput.value.trim()==="" ||
+) {
 
-rollNoInput.value.trim()==="" ||
-
-programSelect.value==="" ||
-
-semesterSelect.value===""
-
-){
-
-alert("Please fill all mandatory fields.");
+alert(
+"Mentor Name and Roll Number are mandatory."
+);
 
 return;
 

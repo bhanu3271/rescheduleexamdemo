@@ -1,504 +1,593 @@
-// ======================================
-// INPUT ELEMENTS
-// ======================================
+const mentorNameInput =
+document.getElementById("mentorName");
 
-const mentorNameInput = document.getElementById("mentorName");
-const learnerNameInput = document.getElementById("learnerName");
-const rollNoInput = document.getElementById("rollNo");
+const learnerNameInput =
+document.getElementById("learnerName");
 
-const programSelect = document.getElementById("program");
-const semesterSelect = document.getElementById("semester");
+const rollNoInput =
+document.getElementById("rollNo");
 
-const loadSubjectsBtn = document.getElementById("loadSubjectsBtn");
+const programSelect =
+document.getElementById("program");
 
-const subjectsSection = document.getElementById("subjectsSection");
-const subjectsContainer = document.getElementById("subjectsContainer");
+const semesterSelect =
+document.getElementById("semester");
 
-const reviewSection = document.getElementById("reviewSection");
+const loadSubjectsBtn =
+document.getElementById("loadSubjectsBtn");
 
-const scheduleForm = document.getElementById("scheduleForm");
+const subjectsSection =
+document.getElementById("subjectsSection");
 
-const submitBtn = document.getElementById("submitBtn");
+const subjectsContainer =
+document.getElementById("subjectsContainer");
 
-const successMsg = document.getElementById("successMsg");
-const successDetail = document.getElementById("successDetail");
+const reviewSection =
+document.getElementById("reviewSection");
+
+const scheduleForm =
+document.getElementById("scheduleForm");
+
+const submitBtn =
+document.getElementById("submitBtn");
+
+const successMsg =
+document.getElementById("successMsg");
+
+const successDetail =
+document.getElementById("successDetail");
 
 
-// ======================================
-// GOOGLE SHEETS WEB APP URL
-// ======================================
+// GOOGLE SCRIPT URL
 
 const GOOGLE_SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbwZCBleMBuNaSBj-GiXOOyUrIG87Pf2kG0-iH94lD6ZLfDXqQpZqSr5Pwqxsy3cTVtvmQ/exec";
+"https://script.google.com/macros/s/YOUR_WEB_APP_URL/exec";
 
 
-// ======================================
+
 // LOAD PROGRAMS
-// ======================================
 
-async function loadPrograms() {
+async function loadPrograms(){
 
-  try {
+try{
 
-    const { data, error } = await supabaseClient
-      .from("exam_schedule")
-      .select("program")
-      .order("program");
+const {data,error}=await supabaseClient
+.from("exam_schedule")
+.select("program")
+.order("program");
 
-    if (error) throw error;
+if(error) throw error;
 
-    const uniquePrograms = [
-      ...new Set(
-        data
-          .map(item => item.program)
-          .filter(Boolean)
-      )
-    ];
+const programs=[
 
-    programSelect.innerHTML =
-      '<option value="">-- Select Program --</option>';
+...new Set(
 
-    uniquePrograms.forEach(program => {
+data.map(x=>x.program)
+.filter(Boolean)
 
-      programSelect.innerHTML += `
-        <option value="${program}">
-          ${program}
-        </option>
-      `;
+)
 
-    });
+];
 
-  }
+programSelect.innerHTML=
+'<option value="">-- Select Program --</option>';
 
-  catch (err) {
+programs.forEach(program=>{
 
-    console.error(
-      "Program Load Error:",
-      err.message
-    );
+programSelect.innerHTML +=`
 
-  }
+<option value="${program}">
+${program}
+</option>
+
+`;
+
+});
+
+}
+
+catch(error){
+
+console.log(error);
+
+}
 
 }
 
 loadPrograms();
 
 
-// ======================================
+
+
 // LOAD SEMESTERS
-// ======================================
+
 
 programSelect.addEventListener(
 
-  "change",
+"change",
 
-  async () => {
+async()=>{
 
-    const selectedProgram = programSelect.value;
+const selectedProgram=
+programSelect.value;
 
-    semesterSelect.innerHTML =
-      '<option value="">Loading...</option>';
+semesterSelect.innerHTML=
+'<option value="">Loading...</option>';
 
-    try {
+try{
 
-      const { data, error } = await supabaseClient
-        .from("exam_schedule")
-        .select("semester")
-        .eq("program", selectedProgram)
-        .order("semester");
+const {data,error}=await supabaseClient
 
-      if (error) throw error;
+.from("exam_schedule")
 
-      const uniqueSemesters = [
-        ...new Set(
-          data
-            .map(item => item.semester)
-            .filter(Boolean)
-        )
-      ];
+.select("semester")
 
-      semesterSelect.innerHTML =
-        '<option value="">-- Select Semester --</option>';
+.eq("program",selectedProgram)
 
-      uniqueSemesters.forEach(semester => {
+.order("semester");
 
-        semesterSelect.innerHTML += `
-          <option value="${semester}">
-            Semester ${semester}
-          </option>
-        `;
 
-      });
+if(error) throw error;
 
-    }
 
-    catch (err) {
+const semesters=[
 
-      console.error(
-        "Semester Load Error:",
-        err.message
-      );
+...new Set(
 
-      semesterSelect.innerHTML =
-        '<option value="">Error Loading</option>';
+data.map(x=>x.semester)
+.filter(Boolean)
 
-    }
+)
 
-  }
+];
 
-);
 
+semesterSelect.innerHTML=
 
-// ======================================
-// LOAD PAPER CODES
-// ======================================
+'<option value="">-- Select Semester --</option>';
 
-async function loadSubjects() {
 
-  const selectedProgram = programSelect.value;
-  const selectedSemester = semesterSelect.value;
+semesters.forEach(semester=>{
 
-  if (!selectedProgram || !selectedSemester) {
+semesterSelect.innerHTML +=`
 
-    alert("Please select Program and Semester.");
-    return;
+<option value="${semester}">
+Semester ${semester}
+</option>
 
-  }
+`;
 
-  subjectsContainer.innerHTML = `
-      <p>Loading Paper Codes...</p>
-  `;
+});
 
-  try {
-
-    const { data, error } = await supabaseClient
-      .from("exam_schedule")
-      .select("*")
-      .eq("program", selectedProgram)
-      .eq("semester", selectedSemester);
-
-    if (error) throw error;
-
-    subjectsContainer.innerHTML = "";
-
-    if (!data.length) {
-
-      subjectsContainer.innerHTML = `
-      <div class="empty-msg">
-      No Paper Codes Found.
-      </div>
-      `;
-
-      return;
-
-    }
-
-    // GROUP PAPER CODES
-
-    const groupedSubjects = {};
-
-    data.forEach(subject => {
-
-      const code = subject.paper_code;
-
-      if (!groupedSubjects[code]) {
-
-        groupedSubjects[code] = {
-
-          paper_code: subject.paper_code,
-          slots: []
-
-        };
-
-      }
-
-      groupedSubjects[code].slots.push({
-
-        exam_date: subject.exam_date,
-        exam_time: subject.exam_time
-
-      });
-
-    });
-
-
-    // ======================================
-    // RENDER PAPER CODES
-    // ======================================
-
-    Object.values(groupedSubjects)
-      .forEach((subject, index) => {
-
-        const slotOptions = subject.slots.map(slot => {
-
-          return `
-            <option value="${slot.exam_date}|${slot.exam_time}">
-            ${slot.exam_date} - ${slot.exam_time}
-            </option>
-          `;
-
-        }).join("");
-
-        subjectsContainer.innerHTML += `
-
-        <div class="subject-card">
-
-          <div class="sub-header">
-
-            <div class="sub-index">
-            ${index + 1}
-            </div>
-
-            <div class="sub-info">
-
-              <div class="sub-code">
-              ${subject.paper_code}
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="sub-inputs">
-
-            <div class="sub-field">
-
-              <label>
-              Select Exam Slot
-              </label>
-
-              <select
-              class="exam-slot"
-              data-code="${subject.paper_code}">
-
-                <option value="">
-                Select Exam Slot
-                </option>
-
-                ${slotOptions}
-
-              </select>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        `;
-
-      });
-
-    subjectsSection.classList.remove("hidden");
-    reviewSection.classList.remove("hidden");
-
-    subjectsSection.scrollIntoView({
-      behavior: "smooth"
-    });
-
-  }
-
-  catch (err) {
-
-    console.error(
-      "Subject Load Error:",
-      err.message
-    );
-
-    alert(
-      "Error loading Paper Codes."
-    );
-
-  }
 
 }
+
+catch(error){
+
+console.log(error);
+
+semesterSelect.innerHTML=
+'<option value="">Error Loading</option>';
+
+}
+
+}
+
+);
+// LOAD SUBJECTS
+
+
+async function loadSubjects(){
+
+const selectedProgram=
+programSelect.value;
+
+const selectedSemester=
+semesterSelect.value;
+
+
+if(!selectedProgram || !selectedSemester){
+
+alert("Please select Program and Semester.");
+
+return;
+
+}
+
+
+subjectsContainer.innerHTML=
+"<p>Loading Paper Codes...</p>";
+
+
+try{
+
+
+const {data,error}=await supabaseClient
+
+.from("exam_schedule")
+
+.select("*")
+
+.eq("program",selectedProgram)
+
+.eq("semester",selectedSemester);
+
+
+if(error) throw error;
+
+
+subjectsContainer.innerHTML="";
+
+
+const groupedSubjects={};
+
+
+data.forEach(subject=>{
+
+const code=subject.paper_code;
+
+
+if(!groupedSubjects[code]){
+
+groupedSubjects[code]={
+
+paper_code:subject.paper_code,
+
+slots:[]
+
+};
+
+}
+
+
+groupedSubjects[code].slots.push({
+
+exam_date:subject.exam_date,
+
+exam_time:subject.exam_time
+
+});
+
+});
+
+
+
+const today=new Date();
+
+
+Object.values(groupedSubjects)
+.forEach((subject,index)=>{
+
+
+let slotOptions="";
+
+
+subject.slots.forEach(slot=>{
+
+const examDate=
+new Date(slot.exam_date);
+
+const cutoffDate=
+new Date(examDate);
+
+cutoffDate.setDate(
+cutoffDate.getDate()-2
+);
+
+cutoffDate.setHours(0,0,0,0);
+
+
+// REMOVE SLOT IF LESS THAN 48 HRS
+
+
+if(today >= cutoffDate){
+
+return;
+
+}
+
+
+slotOptions +=`
+
+<option value="${slot.exam_date}|${slot.exam_time}">
+
+${slot.exam_date} - ${slot.exam_time}
+
+</option>
+
+`;
+
+});
+
+
+if(slotOptions===""){
+
+return;
+
+}
+
+
+subjectsContainer.innerHTML +=`
+
+<div class="subject-card">
+
+<div class="sub-header">
+
+<div class="sub-index">
+
+${index+1}
+
+</div>
+
+<div class="sub-info">
+
+<div class="sub-code">
+
+${subject.paper_code}
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="sub-inputs">
+
+<div class="sub-field">
+
+<label>
+
+Select Exam Slot
+
+</label>
+
+
+<select
+class="exam-slot"
+data-code="${subject.paper_code}">
+
+
+<option value="">
+Select Exam Slot
+</option>
+
+
+${slotOptions}
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+
+subjectsSection.classList.remove("hidden");
+
+reviewSection.classList.remove("hidden");
+
+
+}
+
+catch(error){
+
+console.log(error);
+
+alert("Unable to load Paper Codes.");
+
+}
+
+}
+
+
 
 loadSubjectsBtn.addEventListener(
-  "click",
-  loadSubjects
+"click",
+loadSubjects
 );
 
 
-// ======================================
-// COLLECT FORM DATA
-// ======================================
 
-function collectFormData() {
+// COLLECT DATA
 
-  const examSlots =
-    document.querySelectorAll(".exam-slot");
 
-  const rows = [];
+function collectFormData(){
 
-  examSlots.forEach(slot => {
+const examSlots=
+document.querySelectorAll(".exam-slot");
 
-    if (!slot.value) return;
 
-    const values =
-      slot.value.split("|");
+const rows=[];
 
-    rows.push({
 
-      mentor_name:
-        mentorNameInput.value.trim(),
+examSlots.forEach(slot=>{
 
-      learner_name:
-        learnerNameInput.value.trim(),
 
-      roll_no:
-        rollNoInput.value.trim(),
+if(!slot.value) return;
 
-      program:
-        programSelect.value,
 
-      semester:
-        semesterSelect.value,
+const values=
+slot.value.split("|");
 
-      paper_code:
-        slot.dataset.code,
 
-      exam_date:
-        values[0],
+rows.push({
 
-      exam_time:
-        values[1]
+mentor_name:
+mentorNameInput.value.trim(),
 
-    });
+learner_name:
+learnerNameInput.value.trim(),
 
-  });
+roll_no:
+rollNoInput.value.trim(),
 
-  return rows;
+program:
+programSelect.value,
+
+semester:
+semesterSelect.value,
+
+paper_code:
+slot.dataset.code,
+
+exam_date:
+values[0],
+
+exam_time:
+values[1]
+
+});
+
+});
+
+
+return rows;
 
 }
 
 
-// ======================================
+
 // SUBMIT FORM
-// ======================================
+
+
 
 scheduleForm.addEventListener(
 
-  "submit",
+"submit",
 
-  async (e) => {
+async(e)=>{
 
-    e.preventDefault();
+e.preventDefault();
 
-    // VALIDATION
 
-    if (
+if(
 
-      mentorNameInput.value.trim() === "" ||
-      learnerNameInput.value.trim() === "" ||
-      rollNoInput.value.trim() === "" ||
-      programSelect.value === "" ||
-      semesterSelect.value === ""
+mentorNameInput.value.trim()==="" ||
 
-    ) {
+learnerNameInput.value.trim()==="" ||
 
-      alert(
-        "Please fill all mandatory fields."
-      );
+rollNoInput.value.trim()==="" ||
 
-      return;
+programSelect.value==="" ||
 
-    }
+semesterSelect.value===""
 
-   const rows = collectFormData();
+){
 
-// At least one subject must be selected
+alert("Please fill all mandatory fields.");
 
-if (rows.length === 0) {
-
-    alert("Please select at least one exam slot.");
-
-    return;
+return;
 
 }
 
-    submitBtn.disabled = true;
 
-    submitBtn.innerHTML = `
-      <i class="fas fa-spinner fa-spin"></i>
-      Submitting...
-    `;
+const rows=
+collectFormData();
 
-    try {
 
-      await fetch(
+// ONLY ONE SUBJECT IS ENOUGH
 
-        GOOGLE_SCRIPT_URL,
 
-        {
+if(rows.length===0){
 
-          method: "POST",
+alert(
+"Please select at least one exam slot."
+);
 
-          mode: "no-cors",
+return;
 
-          headers: {
-            "Content-Type": "application/json"
-          },
+}
 
-          body: JSON.stringify(rows)
 
-        }
+submitBtn.disabled=true;
 
-      );
 
-      successMsg.classList.remove("hidden");
+submitBtn.innerHTML=
 
-      successDetail.textContent =
-        "Your reschedule request has been submitted successfully.";
+'<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
-      // RESET FORM
 
-      scheduleForm.reset();
+try{
 
-      programSelect.innerHTML =
-        '<option value="">-- Select Program --</option>';
 
-      semesterSelect.innerHTML =
-        '<option value="">-- Select Semester --</option>';
+await fetch(
 
-      subjectsContainer.innerHTML = "";
+GOOGLE_SCRIPT_URL,
 
-      subjectsSection.classList.add("hidden");
-      reviewSection.classList.add("hidden");
+{
 
-      // Reload Programs
+method:"POST",
 
-      loadPrograms();
+mode:"no-cors",
 
-      successMsg.scrollIntoView({
-        behavior: "smooth"
-      });
+headers:{
 
-    }
+"Content-Type":"application/json"
 
-    catch (err) {
+},
 
-      console.error(
-        "Submit Error:",
-        err.message
-      );
+body:JSON.stringify(rows)
 
-      alert(
-        "Error submitting the request."
-      );
+}
 
-    }
+);
 
-    finally {
 
-      submitBtn.disabled = false;
+successMsg.classList.remove("hidden");
 
-      submitBtn.innerHTML = `
-        <i class="fas fa-paper-plane"></i>
-        Submit Request
-      `;
 
-    }
+successDetail.textContent=
 
-  }
+"Request submitted successfully.";
+
+
+
+scheduleForm.reset();
+
+
+subjectsContainer.innerHTML="";
+
+
+subjectsSection.classList.add("hidden");
+
+reviewSection.classList.add("hidden");
+
+
+loadPrograms();
+
+
+}
+
+catch(error){
+
+console.log(error);
+
+alert(
+"Error while submitting."
+);
+
+}
+
+
+finally{
+
+
+submitBtn.disabled=false;
+
+
+submitBtn.innerHTML=
+
+'<i class="fas fa-paper-plane"></i> Submit Request';
+
+}
+
+
+}
 
 );

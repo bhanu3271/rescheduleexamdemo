@@ -404,20 +404,17 @@ scheduleForm.addEventListener(
 
     }
 
-    const rows = collectFormData();
+   const rows = collectFormData();
 
-    const totalSubjects =
-      document.querySelectorAll(".exam-slot").length;
+// At least one subject must be selected
 
-    if (rows.length !== totalSubjects) {
+if (rows.length === 0) {
 
-      alert(
-        "Please select an exam slot for all paper codes."
-      );
+    alert("Please select at least one exam slot.");
 
-      return;
+    return;
 
-    }
+}
 
     submitBtn.disabled = true;
 

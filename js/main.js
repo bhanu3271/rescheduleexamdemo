@@ -457,6 +457,10 @@ return rows;
 
 
 
+// ======================================
+// SUBMIT FORM
+// ======================================
+
 scheduleForm.addEventListener(
 
 "submit",
@@ -466,33 +470,103 @@ async(e)=>{
 e.preventDefault();
 
 
-if (
+// Mentor Name Mandatory
 
-mentorNameInput.value.trim() === "" ||
-rollNoInput.value.trim() === ""
+if(
 
-) {
+mentorNameInput.value.trim()===""
+
+){
 
 alert(
-"Mentor Name and Roll Number are mandatory."
+
+"Please enter Mentor Name."
+
 );
+
+mentorNameInput.focus();
 
 return;
 
 }
 
 
-const rows=
-collectFormData();
+// Roll Number Mandatory
+
+if(
+
+rollNoInput.value.trim()===""
+
+){
+
+alert(
+
+"Please enter Roll Number."
+
+);
+
+rollNoInput.focus();
+
+return;
+
+}
 
 
-// ONLY ONE SUBJECT IS ENOUGH
+// Program Mandatory
 
+if(
+
+programSelect.value===""
+
+){
+
+alert(
+
+"Please select Program."
+
+);
+
+programSelect.focus();
+
+return;
+
+}
+
+
+// Semester Mandatory
+
+if(
+
+semesterSelect.value===""
+
+){
+
+alert(
+
+"Please select Semester."
+
+);
+
+semesterSelect.focus();
+
+return;
+
+}
+
+
+// Collect Selected Subjects
+
+const rows = collectFormData();
+
+
+// At least one paper should be selected
 
 if(rows.length===0){
 
 alert(
+
 "Please select at least one exam slot."
+
 );
 
 return;
@@ -500,10 +574,11 @@ return;
 }
 
 
-submitBtn.disabled=true;
+// Disable Submit Button
 
+submitBtn.disabled = true;
 
-submitBtn.innerHTML=
+submitBtn.innerHTML =
 
 '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
@@ -517,54 +592,81 @@ GOOGLE_SCRIPT_URL,
 
 {
 
-method:"POST",
+method : "POST",
 
-mode:"no-cors",
+mode : "no-cors",
 
-headers:{
+headers : {
 
 "Content-Type":"application/json"
 
 },
 
-body:JSON.stringify(rows)
+body : JSON.stringify(rows)
 
 }
 
 );
 
 
-successMsg.classList.remove("hidden");
+// Show Success Message
+
+successMsg.classList.remove(
+
+"hidden"
+
+);
 
 
-successDetail.textContent=
+successDetail.textContent =
 
-"Request submitted successfully.";
+"Your Reschedule Request has been submitted successfully.";
 
 
+// Reset Form
 
 scheduleForm.reset();
 
+subjectsContainer.innerHTML = "";
 
-subjectsContainer.innerHTML="";
+subjectsSection.classList.add(
+
+"hidden"
+
+);
+
+reviewSection.classList.add(
+
+"hidden"
+
+);
 
 
-subjectsSection.classList.add("hidden");
-
-reviewSection.classList.add("hidden");
-
+// Reload Programs
 
 loadPrograms();
 
 
+// Scroll to Success Message
+
+successMsg.scrollIntoView({
+
+behavior : "smooth"
+
+});
+
+
 }
+
 
 catch(error){
 
 console.log(error);
 
 alert(
-"Error while submitting."
+
+"Error while submitting the request."
+
 );
 
 }
@@ -573,12 +675,13 @@ alert(
 finally{
 
 
-submitBtn.disabled=false;
+submitBtn.disabled = false;
 
 
-submitBtn.innerHTML=
+submitBtn.innerHTML =
 
 '<i class="fas fa-paper-plane"></i> Submit Request';
+
 
 }
 

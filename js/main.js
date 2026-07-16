@@ -3,43 +3,43 @@
 // ======================================
 
 const mentorNameInput =
-  document.getElementById("mentorName");
+document.getElementById("mentorName");
 
 const learnerNameInput =
-  document.getElementById("learnerName");
+document.getElementById("learnerName");
 
 const rollNoInput =
-  document.getElementById("rollNo");
+document.getElementById("rollNo");
 
 const programSelect =
-  document.getElementById("program");
+document.getElementById("program");
 
 const semesterSelect =
-  document.getElementById("semester");
+document.getElementById("semester");
 
 const loadSubjectsBtn =
-  document.getElementById("loadSubjectsBtn");
+document.getElementById("loadSubjectsBtn");
 
 const subjectsSection =
-  document.getElementById("subjectsSection");
+document.getElementById("subjectsSection");
 
 const subjectsContainer =
-  document.getElementById("subjectsContainer");
+document.getElementById("subjectsContainer");
 
 const reviewSection =
-  document.getElementById("reviewSection");
+document.getElementById("reviewSection");
 
 const scheduleForm =
-  document.getElementById("scheduleForm");
+document.getElementById("scheduleForm");
 
 const submitBtn =
-  document.getElementById("submitBtn");
+document.getElementById("submitBtn");
 
 const successMsg =
-  document.getElementById("successMsg");
+document.getElementById("successMsg");
 
 const successDetail =
-  document.getElementById("successDetail");
+document.getElementById("successDetail");
 
 
 // ======================================
@@ -47,7 +47,7 @@ const successDetail =
 // ======================================
 
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbwoBA2hMTxPPCz_YpxepMCYZeiUXFCzTToNNwtKq9fJ3d9I-l53Yq3gspoeLYRnVHFk/exec";
+"https://script.google.com/macros/s/AKfycbwoBA2hMTxPPCz_YpxepMCYZeiUXFCzTToNNwtKq9fJ3d9I-l53Yq3gspoeLYRnVHFk/exec";
 
 
 // ======================================
@@ -56,50 +56,58 @@ const GOOGLE_SCRIPT_URL =
 
 async function loadPrograms() {
 
-  try {
+try {
 
-    const { data, error } =
-      await supabaseClient
-        .from("exam_schedule")
-        .select("program");
+const { data, error } =
+await supabaseClient
+.from("exam_schedule")
+.select("program")
+.order("program");
 
-    if (error) throw error;
+if (error) throw error;
 
-    const uniquePrograms =
-      [...new Set(
-        data
-          .map(item => item.program)
-          .filter(Boolean)
-      )];
 
-    programSelect.innerHTML =
-      '<option value="">-- Select Program --</option>';
+const uniquePrograms =
 
-    uniquePrograms.forEach(program => {
+[...new Set(
+data
+.map(item => item.program)
+.filter(Boolean)
+)];
 
-      programSelect.innerHTML += `
-      <option value="${program}">
-      ${program}
-      </option>
-      `;
 
-    });
+programSelect.innerHTML =
+'<option value="">-- Select Program --</option>';
 
-  }
 
-  catch (err) {
+uniquePrograms.forEach(program => {
 
-    console.error(
-      "Program Load Error:",
-      err.message
-    );
+programSelect.innerHTML += `
 
-  }
+<option value="${program}">
+${program}
+</option>
+
+`;
+
+});
+
 
 }
 
-loadPrograms();
+catch(err){
 
+console.error(
+"Program Load Error:",
+err.message
+);
+
+}
+
+}
+
+
+loadPrograms();
 
 
 // ======================================
@@ -107,283 +115,305 @@ loadPrograms();
 // ======================================
 
 programSelect.addEventListener(
-  "change",
-  async () => {
 
-    const selectedProgram =
-      programSelect.value;
+"change",
 
+async () => {
 
-    semesterSelect.innerHTML =
-      '<option value="">Loading...</option>';
+const selectedProgram =
+programSelect.value;
 
 
-    try {
-
-      const { data, error } =
-        await supabaseClient
-          .from("exam_schedule")
-          .select("semester")
-          .eq("program", selectedProgram);
+semesterSelect.innerHTML =
+'<option value="">Loading...</option>';
 
 
-      if (error) throw error;
+try{
 
 
-      const uniqueSemesters =
-        [...new Set(
-          data
-            .map(item => item.semester)
-            .filter(Boolean)
-        )];
+const { data, error } =
+
+await supabaseClient
+.from("exam_schedule")
+.select("semester")
+.eq("program", selectedProgram)
+.order("semester");
 
 
-      semesterSelect.innerHTML =
-        '<option value="">-- Select Semester --</option>';
+if(error) throw error;
 
 
-      uniqueSemesters.forEach(semester => {
+const uniqueSemesters =
 
-        semesterSelect.innerHTML += `
-        <option value="${semester}">
-        Semester ${semester}
-        </option>
-        `;
+[...new Set(
+data
+.map(item => item.semester)
+.filter(Boolean)
+)];
 
-      });
 
-    }
+semesterSelect.innerHTML =
+'<option value="">-- Select Semester --</option>';
 
-    catch (err) {
 
-      console.error(
-        "Semester Load Error:",
-        err.message
-      );
+uniqueSemesters.forEach(semester => {
 
-      semesterSelect.innerHTML =
-        '<option value="">Error Loading</option>';
+semesterSelect.innerHTML += `
 
-    }
+<option value="${semester}">
+Semester ${semester}
+</option>
 
-  }
+`;
+
+});
+
+
+}
+
+catch(err){
+
+console.error(
+"Semester Load Error:",
+err.message
+);
+
+semesterSelect.innerHTML =
+'<option value="">Error Loading</option>';
+
+}
+
+}
+
 );
 
 
 // ======================================
-// LOAD SUBJECTS
+// LOAD PAPER CODES
 // ======================================
 
-async function loadSubjects() {
+async function loadSubjects(){
 
-  const selectedProgram =
-    programSelect.value;
+const selectedProgram =
+programSelect.value;
 
-  const selectedSemester =
-    semesterSelect.value;
+const selectedSemester =
+semesterSelect.value;
 
 
-  if (!selectedProgram ||
-      !selectedSemester) {
+if(!selectedProgram ||
+!selectedSemester){
 
-    alert(
-      "Please select Program and Semester."
-    );
+alert(
+"Please select Program and Semester."
+);
 
-    return;
+return;
 
-  }
+}
 
 
-  try {
+try{
 
-    const { data, error } =
-      await supabaseClient
-        .from("exam_schedule")
-        .select("*")
-        .eq("program", selectedProgram)
-        .eq("semester", selectedSemester);
+const { data, error } =
 
+await supabaseClient
+.from("exam_schedule")
+.select("*")
+.eq("program", selectedProgram)
+.eq("semester", selectedSemester);
 
-    if (error) throw error;
 
+if(error) throw error;
 
-    subjectsContainer.innerHTML = "";
 
+subjectsContainer.innerHTML = "";
 
-    if (!data.length) {
 
-      subjectsContainer.innerHTML = `
-      <div class="empty-msg">
-      No subjects found.
-      </div>
-      `;
+if(!data.length){
 
-      return;
+subjectsContainer.innerHTML = `
 
-    }
+<div class="empty-msg">
 
+No Paper Codes Found.
 
-    // GROUP SUBJECTS
+</div>
 
-    const groupedSubjects = {};
+`;
 
+return;
 
-    data.forEach(subject => {
+}
 
-      const code =
-        subject.paper_code;
 
+// GROUP PAPER CODES
 
-      if (!groupedSubjects[code]) {
+const groupedSubjects = {};
 
-        groupedSubjects[code] = {
 
-          paper_code:
-            subject.paper_code,
+data.forEach(subject => {
 
-          course_name:
-            subject.course_name,
+const code =
+subject.paper_code;
 
-          slots: []
 
-        };
+if(!groupedSubjects[code]){
 
-      }
+groupedSubjects[code] = {
 
+paper_code :
+subject.paper_code,
 
-      groupedSubjects[code].slots.push({
+slots : []
 
-        exam_date:
-          subject.exam_date,
+};
 
-        exam_time:
-          subject.exam_time
+}
 
-      });
 
-    });
+groupedSubjects[code].slots.push({
 
+exam_date :
+subject.exam_date,
 
+exam_time :
+subject.exam_time
 
-    // RENDER SUBJECTS
+});
 
-    Object.values(groupedSubjects)
-      .forEach((subject, index) => {
+});
+// ======================================
+// RENDER PAPER CODES
+// ======================================
 
+Object.values(groupedSubjects)
+.forEach((subject,index)=>{
 
-      const slotOptions =
-        subject.slots.map(slot => {
 
-          return `
-          <option value="${slot.exam_date}|${slot.exam_time}">
+const slotOptions =
 
-          ${slot.exam_date} - ${slot.exam_time}
+subject.slots.map(slot => {
 
-          </option>
-          `;
+return `
 
-        }).join("");
+<option value="${slot.exam_date}|${slot.exam_time}">
 
+${slot.exam_date} - ${slot.exam_time}
 
+</option>
 
-      subjectsContainer.innerHTML += `
+`;
 
-      <div class="subject-card">
+}).join("");
 
-        <div class="sub-header">
 
-          <div class="sub-index">
-          ${index + 1}
-          </div>
 
-          <div class="sub-info">
+subjectsContainer.innerHTML += `
 
-            <div class="sub-code">
-            ${subject.paper_code}
-            </div>
+<div class="subject-card">
 
-            <div class="sub-name">
-            ${subject.course_name}
-            </div>
+<div class="sub-header">
 
-          </div>
+<div class="sub-index">
 
-        </div>
+${index + 1}
 
+</div>
 
-        <div class="sub-inputs">
 
-          <div class="sub-field">
+<div class="sub-info">
 
-            <label>
-            Select Exam Slot
-            </label>
+<div class="sub-code">
 
-            <select
-            class="exam-slot"
-            data-code="${subject.paper_code}"
-            data-name="${subject.course_name}">
+${subject.paper_code}
 
-            <option value="">
-            Select Exam Slot
-            </option>
+</div>
 
-            ${slotOptions}
+</div>
 
-            </select>
+</div>
 
-          </div>
 
-        </div>
 
-      </div>
+<div class="sub-inputs">
 
-      `;
+<div class="sub-field">
 
+<label>
 
-    });
+Select Exam Slot
 
+</label>
 
 
-    subjectsSection.classList.remove(
-      "hidden"
-    );
+<select
 
+class="exam-slot"
 
-    reviewSection.classList.remove(
-      "hidden"
-    );
+data-code="${subject.paper_code}"
 
+>
 
-    subjectsSection.scrollIntoView({
+<option value="">
 
-      behavior: "smooth"
+Select Exam Slot
 
-    });
+</option>
 
 
-  }
+${slotOptions}
 
-  catch (err) {
 
-    console.error(
-      "Subject Load Error:",
-      err.message
-    );
+</select>
 
-    alert(
-      "Error loading subjects."
-    );
+</div>
 
-  }
+</div>
+
+</div>
+
+`;
+
+});
+
+
+subjectsSection.classList.remove(
+"hidden"
+);
+
+reviewSection.classList.remove(
+"hidden"
+);
+
+subjectsSection.scrollIntoView({
+
+behavior : "smooth"
+
+});
+
+
+}
+
+catch(err){
+
+console.error(
+"Subject Load Error:",
+err.message
+);
+
+alert(
+"Error loading Paper Codes."
+);
+
+}
 
 }
 
 
 loadSubjectsBtn.addEventListener(
-  "click",
-  loadSubjects
+"click",
+loadSubjects
 );
 
 
@@ -391,64 +421,63 @@ loadSubjectsBtn.addEventListener(
 // COLLECT FORM DATA
 // ======================================
 
-function collectFormData() {
-
-  const examSlots =
-    document.querySelectorAll(
-      ".exam-slot"
-    );
+function collectFormData(){
 
 
-  const rows = [];
+const examSlots =
+
+document.querySelectorAll(
+".exam-slot"
+);
 
 
-  examSlots.forEach(slot => {
-
-    if (!slot.value) return;
+const rows = [];
 
 
-    const values =
-      slot.value.split("|");
+examSlots.forEach(slot => {
 
 
-    rows.push({
-
-      mentor_name:
-        mentorNameInput.value.trim(),
-
-      learner_name:
-        learnerNameInput.value.trim(),
-
-      roll_no:
-        rollNoInput.value.trim(),
-
-      program:
-        programSelect.value,
-
-      semester:
-        semesterSelect.value,
-
-      paper_code:
-        slot.dataset.code,
-
-      course_name:
-        slot.dataset.name,
-
-      exam_date:
-        values[0],
-
-      exam_time:
-        values[1]
-
-    });
-
-  });
+if(!slot.value) return;
 
 
-  return rows;
+const values =
+slot.value.split("|");
+
+
+rows.push({
+
+mentor_name :
+mentorNameInput.value.trim(),
+
+learner_name :
+learnerNameInput.value.trim(),
+
+roll_no :
+rollNoInput.value.trim(),
+
+program :
+programSelect.value,
+
+semester :
+semesterSelect.value,
+
+paper_code :
+slot.dataset.code,
+
+exam_date :
+values[0],
+
+exam_time :
+values[1]
+
+});
+
+});
+
+
+return rows;
 
 }
-
 
 
 // ======================================
@@ -457,170 +486,159 @@ function collectFormData() {
 
 scheduleForm.addEventListener(
 
-  "submit",
+"submit",
 
-  async (e) => {
+async (e)=>{
 
-    e.preventDefault();
+e.preventDefault();
 
 
+// VALIDATION
 
-    // VALIDATIONS
+if(
 
-    if (
+mentorNameInput.value.trim() === "" ||
+learnerNameInput.value.trim() === "" ||
+rollNoInput.value.trim() === "" ||
+programSelect.value === "" ||
+semesterSelect.value === ""
 
-      mentorNameInput.value.trim() === "" ||
+){
 
-      learnerNameInput.value.trim() === "" ||
+alert(
+"Please fill all mandatory fields."
+);
 
-      rollNoInput.value.trim() === "" ||
+return;
 
-      programSelect.value === "" ||
+}
 
-      semesterSelect.value === ""
 
-    ) {
+const rows =
+collectFormData();
 
-      alert(
-        "Please fill all mandatory fields."
-      );
 
-      return;
+const totalSubjects =
 
-    }
+document.querySelectorAll(
+".exam-slot"
+).length;
 
 
+if(rows.length !== totalSubjects){
 
-    const rows =
-      collectFormData();
+alert(
+"Please select an exam slot for all paper codes."
+);
 
+return;
 
-    const totalSubjects =
-      document.querySelectorAll(
-        ".exam-slot"
-      ).length;
+}
 
 
+submitBtn.disabled = true;
 
-    if (rows.length !== totalSubjects) {
+submitBtn.innerHTML = `
 
-      alert(
-        "Please select an exam slot for all subjects."
-      );
+<i class="fas fa-spinner fa-spin"></i>
 
-      return;
+Submitting...
 
-    }
+`;
 
 
+try{
 
-    submitBtn.disabled = true;
 
+await fetch(
 
-    submitBtn.innerHTML = `
-    <i class="fas fa-spinner fa-spin"></i>
-    Submitting...
-    `;
+GOOGLE_SCRIPT_URL,
 
+{
 
+method : "POST",
 
-    try {
+mode : "no-cors",
 
+headers : {
 
-      await fetch(
+"Content-Type" :
+"application/json"
 
-        GOOGLE_SCRIPT_URL,
+},
 
-        {
+body :
+JSON.stringify(rows)
 
-          method: "POST",
-
-          mode: "no-cors",
-
-          headers: {
-
-            "Content-Type":
-              "application/json"
-
-          },
-
-          body:
-            JSON.stringify(rows)
-
-        }
-
-      );
-
-
-
-      successMsg.classList.remove(
-        "hidden"
-      );
-
-
-      successDetail.textContent =
-
-        `Reschedule request submitted successfully for ${rows.length} subject(s).`;
-
-
-
-      // RESET FORM
-
-      scheduleForm.reset();
-
-
-      subjectsContainer.innerHTML =
-        "";
-
-
-      subjectsSection.classList.add(
-        "hidden"
-      );
-
-
-      reviewSection.classList.add(
-        "hidden"
-      );
-
-
-      successMsg.scrollIntoView({
-
-        behavior: "smooth"
-
-      });
-
-
-    }
-
-    catch (err) {
-
-
-      console.error(
-        "Submit Error:",
-        err.message
-      );
-
-
-      alert(
-        "Error submitting the request."
-      );
-
-
-    }
-
-    finally {
-
-
-      submitBtn.disabled = false;
-
-
-      submitBtn.innerHTML = `
-      <i class="fas fa-paper-plane"></i>
-      Submit Request
-      `;
-
-    }
-
-  }
+}
 
 );
+
+
+successMsg.classList.remove(
+"hidden"
+);
+
+
+successDetail.textContent =
+
+`Reschedule request submitted successfully for ${rows.length} paper code(s).`;
+
+
+// RESET FORM
+
+scheduleForm.reset();
+
+subjectsContainer.innerHTML = "";
+
+subjectsSection.classList.add(
+"hidden"
+);
+
+reviewSection.classList.add(
+"hidden"
+);
+
+
+successMsg.scrollIntoView({
+
+behavior : "smooth"
+
+});
+
+
+}
+
+catch(err){
+
+console.error(
+"Submit Error:",
+err.message
+);
+
+alert(
+"Error submitting the request."
+);
+
+}
+
+finally{
+
+
+submitBtn.disabled = false;
+
+
+submitBtn.innerHTML = `
+
+<i class="fas fa-paper-plane"></i>
+
+Submit Request
+
+`;
+
+}
+
+}
+
+);  
+  

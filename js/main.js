@@ -29,7 +29,7 @@ const successDetail = document.getElementById("successDetail");
 // ======================================
 
 const GOOGLE_SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbxSEAlCRTQP1bFHAdbz9_sHO2Vz7cyTohyubx2qvV7Fginb87q06Kgq0mSbcpciC9io/exec";
+"https://script.google.com/macros/s/AKfycbwZCBleMBuNaSBj-GiXOOyUrIG87Pf2kG0-iH94lD6ZLfDXqQpZqSr5Pwqxsy3cTVtvmQ/exec";
 
 
 // ======================================

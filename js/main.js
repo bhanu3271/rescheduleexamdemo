@@ -56,6 +56,8 @@ const { data, error } = await supabaseClient
 .select("program")
 .order("program")
 .range(0, 5000);
+console.log("Total rows returned:", data.length);
+console.log(data); 
 
 if(error) throw error;
 

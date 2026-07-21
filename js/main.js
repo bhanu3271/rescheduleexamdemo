@@ -51,10 +51,11 @@ async function loadPrograms(){
 
 try{
 
-const {data,error}=await supabaseClient
+const { data, error } = await supabaseClient
 .from("exam_schedule")
 .select("program")
-.order("program");
+.order("program")
+.range(0, 5000);
 
 if(error) throw error;
 
